@@ -30,6 +30,8 @@ public:
 
 	glm::vec2 position = glm::vec2(0.0, 0.0);
 
+	glm::vec3 color = glm::vec3(1.0, 1.0, 1.0);
+
 	void draw() {
 
 		glEnable(GL_BLEND);
@@ -38,9 +40,10 @@ public:
 
 
 		shader->Use();
+		shader->setVec3("color", color);
 		shader->setVec2("char_pos", char_pos);
 		shader->setVec2("position", position);
-		shader->setFloat("scale", 0.05);
+		shader->setFloat("scale", 0.03);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture->id);
 		glBindVertexArray(quadVAO);

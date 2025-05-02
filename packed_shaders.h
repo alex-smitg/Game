@@ -10,6 +10,7 @@ in vec2 TexCoord;
 uniform sampler2D tex;
 
 uniform vec2 char_pos;
+uniform vec3 color;
 
 void main() {
 	vec2 uv = TexCoord / 32.0 + (1.0/32.0)*char_pos;
@@ -18,7 +19,7 @@ void main() {
 
 	o.a = o.r * o.g * o.b;
 
-	FragColor = o;
+	FragColor = o * vec4(color, 1.0);
 })"},{"font.vertex",R"(#version 330 core
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;

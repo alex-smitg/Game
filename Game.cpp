@@ -347,8 +347,10 @@ int main()
 			actor->draw();
 		}
 
-		font.draw("hello world", glm::vec2(-10.6, -10.6));
-
+		font.draw("hello world\ntesting font\nlol firin my lazor\n.,-+=*/\"'<>()[]!?", glm::vec2(-18.0, -10.6));
+		font.color = glm::vec3(1.0, 0.0, 0.0);
+		font.draw(std::to_string(glfwGetTime()), glm::vec2(-18.0, 0));
+		font.color = glm::vec3(1.0, 1.0, 1.0);
 
 		glBindVertexArray(0);
 
