@@ -8,6 +8,7 @@ class GameActor {
 public:
 	Transform transform;
 
+	
 
 	virtual void draw() {
 

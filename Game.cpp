@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-
+#include <map>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -36,11 +36,11 @@
 #include "image_loader.h"
 #include "point_light.h"
 #include "mesh_instance.h"
-#include "cell.h"
 #include "level_manager.h"
-#include "cell_enum.h"
 #include "font.h"
 #include "font_character.h"
+#include "ship.h"
+#include "random.h"
 
 int window_width = 600;
 int window_height = 600;
@@ -48,14 +48,15 @@ const std::string WINDOW_TITLE = "Game";
 
 float aspectRatio = window_width / window_height;
 
-int fov = 50;
+int fov = 40;
 
+bool lclick = false;
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
-
+unsigned int pickingTexture;
 
 int main()
 {
@@ -97,12 +98,12 @@ int main()
 	std::vector<GameActor*> actors;
 
 
-	
+
 
 	std::string assetsPath = std::string(ASSETS_PATH);
 
+	Random random;
 
-	
 	//-------------------------SHADERS------------------------------------
 	Shader shader = Shader("standart.vertex", "standart.fragment", true);
 	shader.Use();
@@ -127,11 +128,14 @@ int main()
 
 	//------------------------MESH LOADING-------------------------
 	std::vector<std::vector<GLfloat>> vertices;
-	open_obj(assetsPath + "/cell_walk.obj", &vertices);
-	Mesh* cell_walk_mesh = new Mesh(vertices[0], &shader);
+	open_obj(assetsPath + "/ship01.obj", &vertices);
+	Mesh* ship01_mesh = new Mesh(vertices[0], &shader);
+
 	vertices.clear();
-	open_obj(assetsPath + "/cell_stand.obj", &vertices);
-	Mesh* cell_stand_mesh = new Mesh(vertices[0], &shader);
+	open_obj(assetsPath + "/arrow.obj", &vertices);
+	Mesh* arrow = new Mesh(vertices[0], &shader);
+
+
 	//--------------------------------------------------------
 
 
@@ -140,10 +144,17 @@ int main()
 	material->use_diffuse = true;
 	material->diffuse_texture = diffuse_test;
 
-	cell_stand_mesh->material = material;
-	cell_walk_mesh->material = material;
+	ship01_mesh->material = material;
+
+
+
+	Material* green_emission_material = new Material;
+	green_emission_material->emit = true;
+	green_emission_material->diffuse_color = glm::vec3(0.0, 1.0, 0.0);
+
+	arrow->material = green_emission_material;
 	//---------------------------------------------
-	
+
 	//-----------------------LIGTHS--------------------------
 	std::vector<PointLight*> lights;
 
@@ -155,8 +166,9 @@ int main()
 	p->transform.position.y = 5;
 	p->transform.position.x = 10;
 	p->transform.position.z = 10;
-	
+
 	lights.push_back(p);
+
 
 
 	PointLight* red = new PointLight();
@@ -168,14 +180,66 @@ int main()
 	green->color = glm::vec3(0.0f, 1.0f, 0.0f);
 	lights.push_back(green);
 
+	Ship* selected = nullptr;
+
 	//---------------------------------------------------
 
 
+	MeshInstance* arrowO = new MeshInstance();
+	arrowO->mesh = arrow;
+
+	actors.push_back(arrowO);
+
+
+	std::map<uint32_t, Ship*> ids;
+
+
+	Ship* player_ship = new Ship();
+	player_ship->meshInstance = new MeshInstance();
+	player_ship->meshInstance->mesh = ship01_mesh;
+	actors.push_back(player_ship);
+	player_ship->name = "babooshka";
+	ids[1] = player_ship;
+	player_ship->id = 1;
+
+
+	for (int i = 2; i < 15; i++) {
+		Ship* _ship = new Ship();
+		_ship->meshInstance = new MeshInstance();
+		_ship->meshInstance->mesh = ship01_mesh;
+		actors.push_back(_ship);
+		_ship->name = random.generate_random_name();
+		_ship->id = i;
+		_ship->is_enemy = true;
+		_ship->transform.position.x = i * 100 * (random.randfloat());
+		_ship->transform.position.z = 100 * (random.randfloat());
+		ids[i] = _ship;
+	}
+	
+	
+
+
+
+
+	std::vector<GameActor*> pickable;
+
+	pickable.push_back(player_ship);
 
 	//-------------------FONT-----------------------------
 	Font font = Font(&fontShader, fontTexture);
 	//-----------------------------------------
 	
+	//-------------------FBO------------------------
+	unsigned int pickingFBO;
+	glGenFramebuffers(1, &pickingFBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, pickingFBO);
+
+	
+	glGenTextures(1, &pickingTexture);
+	glBindTexture(GL_TEXTURE_2D, pickingTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pickingTexture, 0);
+	//----------------------------------
 
 
 	float mouse_delta = 0;
@@ -184,7 +248,7 @@ int main()
 	bool left_mouse_clicked = false;
 	float horizontalAngle = 3.14f;
 	float verticalAngle = 0.0f;
-	float speed = 0.05f;
+	float speed = 1.4f;
 
 
 
@@ -197,42 +261,12 @@ int main()
 
 	levelManager.loadLevel(assetsPath + "/level0.map");
 
-	for (int x = 0; x < 9; x++) {
-		for (int z = 0; z < 9; z++) {
-			Cell* cell = new Cell();
-			cell->transform.position.x = x*2;
-			cell->transform.position.z = z*2;
-			if (levelManager.getCellType(x, z) == CellType::STAND) {
-				cell->setMesh(cell_stand_mesh);
-			}
-			if (levelManager.getCellType(x, z) == CellType::WALK) {
-				cell->setMesh(cell_walk_mesh);
-			}
 
-			if (levelManager.getCellType(x, z) == CellType::PATH) {
-				cell->setMesh(cell_walk_mesh);
-			}
-
-			if (levelManager.getCellType(x, z) == CellType::START) {
-				cell->setMesh(cell_walk_mesh); //TODO: create new mesh
-				red->transform.position = glm::vec3(x, 0.0f, z) * 2.0f;
-			}
-
-			if (levelManager.getCellType(x, z) == CellType::END) {
-				cell->setMesh(cell_walk_mesh); //TODO: create new mesh
-				green->transform.position = glm::vec3(x, 0.0f, z) * 2.0f ;
-			}
-			
-			actors.push_back(cell);
-		}
-	}
-
-	
-	//
 
 
 	while (!glfwWindowShouldClose(window))
 	{
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //bg color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -296,8 +330,9 @@ int main()
 			up                  // Head is up (set to 0,-1,0 to look upside-down)
 		);
 
+
 		glm::mat4 projection(1.0f);
-		projection = glm::perspective(fov / 180.0f * 3.14f, aspectRatio, 0.1f, 500.0f);
+		projection = glm::perspective(fov / 180.0f * 3.14f, aspectRatio, 0.1f, 5500.0f);
 
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
@@ -306,22 +341,29 @@ int main()
 		float y = 1.0f - (2.0f * ypos) / window_height;
 
 
-		glm::vec4 screenPos = glm::vec4(x,y , 1.0f, 1.0f);
-		glm::mat4 inverseProjection = glm::inverse(projection);
-		glm::mat4 inverseView = glm::inverse(camera->view);
-		glm::vec4 worldPos = inverseProjection * screenPos;
-		worldPos = inverseView * worldPos;
-		worldPos /= worldPos.w;
+		glm::vec4 screenPos = glm::vec4(x,y , -1.0f, 1.0f);
+		glm::vec4 rayEye = glm::inverse(projection) * screenPos;
+		rayEye = glm::vec4(rayEye.x, rayEye.y, -1.0f, 0.0f);
 
+		glm::vec4 rayWorld4 = glm::inverse(camera->view) * rayEye;
+		glm::vec3 rayDir = glm::normalize(glm::vec3(rayWorld4));
 
-		glm::vec3 rayDirection = glm::normalize(glm::vec3(worldPos) - camera->position);
-
-		float t = -camera->position.y / rayDirection.y; 
-
-		glm::vec3 mouseWorldPos = camera->position + t * rayDirection;
+		glm::vec3 mouseWorldPos  = camera->position + rayDir * 150.0f;
 		
 
+		if (selected == nullptr) {
+			arrowO->visible = false;
+		}
+		else {
+			arrowO->visible = true;
+			arrowO->transform.position = selected->end_pos;
+			arrowO->transform.position.y += 2;
+		}
 		
+		
+		arrowO->transform.scale = glm::vec3(0.3, 0.3, 0.3);
+		arrowO->transform.position.y += sin(glfwGetTime()*2.0) / 3.0;
+		arrowO->transform.rotation.y += 0.01;
 		
 
 		shader.Use();
@@ -341,16 +383,164 @@ int main()
 			n += 1;
 		}
 		shader.setInt("light_number", n);
+		
+
+		//pick
+		glBindFramebuffer(GL_FRAMEBUFFER, pickingFBO);
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glViewport(0, 0, window_width, window_height);
+		shader.setBool("color_mode", true);
+
+		for (auto const& [id, ship] : ids)
+		{
+			shader.setVec3("color_color", glm::vec3(id / 255.0f, 0.0, 0.0));
+			ship->draw();
+		}
+
+		unsigned char pixel[3];
+		glReadPixels(xpos, window_height - ypos, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixel);
+		uint32_t selectedID = pixel[0];
+
+		if (lclick == true) {
+
+			if (selected == nullptr) {
+				if (ids.count(selectedID)) {
+					selected = ids[selectedID];
+				}
+			}
+			else {
+				if (selectedID == 0) {
+					if (selected->can_control == true) {
+						selected->navigate(mouseWorldPos);
+					}
+					else {
+						selected = nullptr;
+					}
+				}
+
+				else {
+					if (selected->can_control == true) {
+						if (selected != ids[selectedID]) {
+							if (selected->is_enemy) {
+								selected->attack(ids[selectedID]);
+							}
+						}
+					}
+				}
+
+			}
+			lclick = false;
+		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		shader.setBool("color_mode", false);
+
+
+
 
 		for (GameActor* actor : actors) {
 			actor->update();
 			actor->draw();
+
+
+
 		}
 
-		font.draw("hello world\ntesting font\nlol firin my lazor\n.,-+=*/\"'<>()[]!?", glm::vec2(-18.0, -10.6));
+		shader.Use();
+		shader.setBool("color_mode", true);
+		for (auto const& [id, ship] : ids)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			ship->transform.scale += glm::vec3(0.1f, 0.1f, 0.1f);
+
+			if (ship->is_enemy) {
+				shader.setVec3("color_color", glm::vec3(1.0f, 0.0f, 0.0f));
+			}
+			else {
+				shader.setVec3("color_color", glm::vec3(0.0f, 0.2f, 1.0f));
+			}
+
+
+
+			ship->draw();
+			ship->transform.scale -= glm::vec3(0.1f, 0.1f, 0.1f);
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
+
+			
+
+
+
+
+		}
+		shader.setBool("color_mode", false);
+
+		float logicalWidth = 100.0f; //????
+		float logicalHeight = logicalWidth / aspectRatio;
+
+		glm::mat4 proj = glm::ortho(
+			0.0f, logicalWidth,
+			0.0f, logicalHeight,
+			-1.0f, 1.0f
+		);
+
+
+		glDisable(GL_CULL_FACE);
+
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		
+		if (selected != nullptr) {
+			font.draw("name > " + selected->name, glm::vec2(1.0, logicalHeight - 1.0f), &proj);
+			font.draw("speed > " + std::to_string(selected->speed * selected->acc), glm::vec2(1.0, logicalHeight - 4.0f), &proj);
+		}
+
+		
+
+		for (auto const& [id, ship] : ids)
+		{
+			fontShader.Use();
+
+			glDisable(GL_CULL_FACE);
+
+			glm::mat4 model = glm::mat4(1.0);
+
+			Transform _temp = ship->transform;
+			_temp.position.y += 1;
+
+
+			float distance = glm::length(camera->position - _temp.position);
+			float scale = distance * 0.004f;
+
+			model = glm::translate(model, _temp.position);
+			model = glm::scale(model, glm::vec3(scale));
+
+			glm::vec3 directionToCamera = glm::normalize(camera->position - glm::vec3(model[3][0], model[3][1], model[3][1]));
+			float angle = atan2(directionToCamera.x, directionToCamera.z);
+			glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+			model = model * rotationMatrix;
+
+			fontShader.setBool("in_world", true);
+			fontShader.setMat4("model", model);
+			fontShader.setMat4("view", camera->view);
+			font.draw(ship->name +"\n"+std::to_string(ship->health) , glm::vec2(0.0, 0.0), &projection);
+			fontShader.setBool("in_world", false);
+
+
+			glEnable(GL_CULL_FACE);
+		}
+
+
 		font.color = glm::vec3(1.0, 0.0, 0.0);
-		font.draw(std::to_string(glfwGetTime()), glm::vec2(-18.0, 0));
+		font.draw(std::to_string(glfwGetTime()), glm::vec2(glfwGetTime(), glfwGetTime()), &proj);
 		font.color = glm::vec3(1.0, 1.0, 1.0);
+
+		
+
+		glEnable(GL_CULL_FACE);
 
 		glBindVertexArray(0);
 
@@ -386,10 +576,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	if ((int)height == 0) {
 		aspectRatio = 1;
 	}
+	glBindTexture(GL_TEXTURE_2D, pickingTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == 0) {
+		lclick = true;
+	}
+
+
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == 1) {
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}

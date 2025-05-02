@@ -22,8 +22,8 @@ public:
 	glm::vec3 diffuse_color = glm::vec3(1.0f, 1.0f, 1.0f);
 
 
-	Texture* diffuse_texture;
-	Texture* specular_texture;
-	Texture* normalmap_texture;
+	Texture* diffuse_texture = nullptr;
+	Texture* specular_texture = nullptr;
+	Texture* normalmap_texture = nullptr;
 
 };

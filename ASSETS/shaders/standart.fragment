@@ -33,6 +33,9 @@ uniform float sky_val;
 
 
 
+uniform bool color_mode;
+uniform vec3 color_color;
+
 
 uniform sampler2D oText;
 uniform sampler2D sText;
@@ -127,6 +130,10 @@ vec4 calculatePointLight(PointLight light, vec3 norm, vec3 FragPos, vec3 viewDir
 
 void main()
 {
+    if(color_mode == true) {
+        FragColor = vec4(color_color, 1.0);
+        return;
+    }
     vec2 new_TexCoord = uv_scale * TexCoord;
     vec3 norm = texture(nText, vec2(new_TexCoord.x, 1.0 - new_TexCoord.y)).rgb ;
     norm = norm * 2.0 - 1.0;

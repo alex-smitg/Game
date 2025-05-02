@@ -28,11 +28,23 @@ out vec2 TexCoord;
 
 uniform vec2 position;
 
-uniform float scale;
+uniform bool in_world;
+uniform mat4 view;
+uniform mat4 model;
 
+uniform float scale;
+uniform mat4 projection;
 
 void main() {
-	gl_Position = vec4((aPos.x+position.x)*scale, (aPos.y+position.y)*scale, 0.0, 1.0); 
+	if (in_world==false) {
+	gl_Position = projection * vec4((aPos.x+position.x), (aPos.y+position.y), 0.0, 1.0); 
+	} else {
+
+
+
+	 gl_Position = projection * view * model * vec4((aPos.x+position.x), (aPos.y+position.y), 0.0, 1.0);
+	}
+
 	TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
 })"},{"standart.fragment",R"(#version 330 core
 out vec4 FragColor;
@@ -68,6 +80,9 @@ uniform vec2 uv_scale;
 uniform float sky_val;
 
 
+
+uniform bool color_mode;
+uniform vec3 color_color;
 
 
 uniform sampler2D oText;
@@ -163,6 +178,10 @@ vec4 calculatePointLight(PointLight light, vec3 norm, vec3 FragPos, vec3 viewDir
 
 void main()
 {
+    if(color_mode == true) {
+        FragColor = vec4(color_color, 1.0);
+        return;
+    }
     vec2 new_TexCoord = uv_scale * TexCoord;
     vec3 norm = texture(nText, vec2(new_TexCoord.x, 1.0 - new_TexCoord.y)).rgb ;
     norm = norm * 2.0 - 1.0;

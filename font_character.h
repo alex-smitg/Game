@@ -32,22 +32,27 @@ public:
 
 	glm::vec3 color = glm::vec3(1.0, 1.0, 1.0);
 
+	glm::mat4 projection;
+
 	void draw() {
 
 		glEnable(GL_BLEND);
 
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
 
 		shader->Use();
 		shader->setVec3("color", color);
 		shader->setVec2("char_pos", char_pos);
 		shader->setVec2("position", position);
-		shader->setFloat("scale", 0.03);
+		shader->setFloat("scale", 0.6);
+		shader->setMat4("projection", projection);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture->id);
 		glBindVertexArray(quadVAO);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		glDisable(GL_BLEND);
 	}
 	
 	FontCharacter(Shader* shader) {
@@ -62,6 +67,8 @@ public:
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	}
+
+
 };
 
 

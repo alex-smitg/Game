@@ -55,7 +55,7 @@ public:
 		}
 	}
 
-	void draw(std::string text, glm::vec2 pos){
+	void draw(std::string text, glm::vec2 pos, glm::mat4 *proj){
 		float start_x = pos.x;
 
 		for (char ch : text) {
@@ -67,6 +67,7 @@ public:
 
 
 			FontCharacter* fc = characters[ch];
+			fc->projection = *proj;
 			fc->color = color;
 			fc->position = pos;
 			pos.x += 2.0;

@@ -2,7 +2,7 @@ import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-print("Shaders pack")
+print("Assets generate")
 with open(dir_path + "\packed_shaders.h", "w") as file:
     file.write("#pragma once\n")
     file.write("#include <map>\n")
@@ -19,4 +19,4 @@ with open(dir_path + "\packed_shaders.h", "w") as file:
 
 
     file.write("};")
-print("Shaders pack OK")
+print("Assets generate OK")

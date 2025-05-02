@@ -6,10 +6,22 @@ out vec2 TexCoord;
 
 uniform vec2 position;
 
-uniform float scale;
+uniform bool in_world;
+uniform mat4 view;
+uniform mat4 model;
 
+uniform float scale;
+uniform mat4 projection;
 
 void main() {
-	gl_Position = vec4((aPos.x+position.x)*scale, (aPos.y+position.y)*scale, 0.0, 1.0); 
+	if (in_world==false) {
+	gl_Position = projection * vec4((aPos.x+position.x), (aPos.y+position.y), 0.0, 1.0); 
+	} else {
+
+
+
+	 gl_Position = projection * view * model * vec4((aPos.x+position.x), (aPos.y+position.y), 0.0, 1.0);
+	}
+
 	TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
 }

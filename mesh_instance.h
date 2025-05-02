@@ -9,15 +9,18 @@ class MeshInstance : public GameActor {
 public:
 	Mesh* mesh = nullptr;
 
+	bool visible = true;
+
 	void draw() {
-		if (mesh != nullptr) {
+		if (mesh != nullptr && visible == true) {
+			mesh->transform = transform;
 			mesh->draw();
 		}
 	}
 
 	void update() {
 		if (mesh != nullptr) {
-			mesh->transform = transform;
+			
 		}
 	}
 

@@ -18,7 +18,7 @@ add_definitions(-DASSETS_PATH="${ASSETS_PATH}")
 add_executable (Game "Game.cpp" )
 
 set(HEADER_FILE ${CMAKE_SOURCE_DIR}/packed_shaders.h)
-set(SCRIPT ${CMAKE_SOURCE_DIR}/shader_packer.py)
+set(SCRIPT ${CMAKE_SOURCE_DIR}/packer.py)
 
 add_custom_target(
     shaderPack
