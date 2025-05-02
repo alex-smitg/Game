@@ -5,6 +5,7 @@
 
 #include "game_actor.h"
 #include "mesh_instance.h"
+#include "shader.h"
 
 class Ship : public GameActor {
 public:
@@ -33,12 +34,21 @@ public:
 
 	float distance = 0;
 
+	int next_move = 0;
+
+	int rocket_countdown = 0;
+
+	int damage = 20;
+
+
+
+
 
 	std::string name = "";
 
 
 	void attack(Ship *target) {
-		std::cout << name + "attacking " + target->name + "\n";
+		std::cout << name + " attacking " + target->name + "\n";
 		moving_to_enemy = true;
 		navigate(target->transform.position);
 
@@ -47,7 +57,7 @@ public:
 
 
 	void navigate(glm::vec3 end_pos) {
-		std::cout << name + "navigating" + "\n";
+		std::cout << name + " navigating" + "\n";
 
 		this->end_pos = end_pos;
 
@@ -64,15 +74,28 @@ public:
 		
 		meshInstance->update();
 
+
 		
+
 		if (this->target != nullptr) {
 			distance = glm::distance(target->transform.position, transform.position);
-			if (distance < attack_radius) {
+			if (distance < attack_radius && moving_to_enemy == true) {
+				moving_to_enemy = false;
+				moving = false;
 				attacking = true;
-				if (moving_to_enemy = true) {
-					moving = false;
-				}
 				
+				
+			}
+
+			if(attacking) {
+				target->health -= damage;
+
+				rocket_countdown += 1;
+			}
+
+
+			if (distance > attack_radius && moving_to_enemy==true) {
+				this->target = nullptr;
 			}
 		}
 

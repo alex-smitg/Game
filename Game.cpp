@@ -111,6 +111,10 @@ int main()
 	glUniform1i(glGetUniformLocation(shader.ID, "sText"), 1);
 	glUniform1i(glGetUniformLocation(shader.ID, "nText"), 2);
 
+
+	Shader rocketShader = Shader("trail.vertex", "trail.fragment", true);
+
+
 	Shader fontShader = Shader("font.vertex", "font.fragment", true);
 	fontShader.Use();
 	glUniform1i(glGetUniformLocation(shader.ID, "tex"), 0);
@@ -208,6 +212,7 @@ int main()
 		_ship->meshInstance = new MeshInstance();
 		_ship->meshInstance->mesh = ship01_mesh;
 		actors.push_back(_ship);
+		_ship->rocketShader = &rocketShader;
 		_ship->name = random.generate_random_name();
 		_ship->id = i;
 		_ship->is_enemy = true;
@@ -409,6 +414,7 @@ int main()
 					selected = ids[selectedID];
 				}
 			}
+
 			else {
 				if (selectedID == 0) {
 					if (selected->can_control == true) {
@@ -422,7 +428,7 @@ int main()
 				else {
 					if (selected->can_control == true) {
 						if (selected != ids[selectedID]) {
-							if (selected->is_enemy) {
+							if (ids[selectedID]->is_enemy) {
 								selected->attack(ids[selectedID]);
 							}
 						}
@@ -460,6 +466,17 @@ int main()
 			else {
 				shader.setVec3("color_color", glm::vec3(0.0f, 0.2f, 1.0f));
 			}
+
+			if (ship->is_enemy) {
+					ship->next_move += 1;
+
+					if (ship->next_move == 100) {
+						ship->next_move = 0;
+						ship->attack(player_ship);
+				}
+			}
+
+			
 
 
 
