@@ -2,7 +2,38 @@
 #include <map>
 #include <string>
 std::map<std::string, std::string> shaders = {
-{"standart.fragment",R"(#version 330 core
+{"font.fragment",R"(#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D tex;
+
+uniform vec2 char_pos;
+
+void main() {
+	vec2 uv = TexCoord / 32.0 + (1.0/32.0)*char_pos;
+	
+	vec4 o = texture(tex, uv);
+
+	o.a = o.r * o.g * o.b;
+
+	FragColor = o;
+})"},{"font.vertex",R"(#version 330 core
+layout(location = 0) in vec2 aPos;
+layout(location = 1) in vec2 aTexCoord;
+
+out vec2 TexCoord;
+
+uniform vec2 position;
+
+uniform float scale;
+
+
+void main() {
+	gl_Position = vec4((aPos.x+position.x)*scale, (aPos.y+position.y)*scale, 0.0, 1.0); 
+	TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+})"},{"standart.fragment",R"(#version 330 core
 out vec4 FragColor;
 
 in vec2 TexCoord;

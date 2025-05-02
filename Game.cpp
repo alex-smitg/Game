@@ -22,10 +22,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "bullet/btBulletDynamicsCommon.h"
 
 
-#include "player.h"
+
 
 #include "shader.h"
 
@@ -36,9 +35,12 @@
 #include "camera.h"
 #include "image_loader.h"
 #include "point_light.h"
-#include "rigidbody.h"
-#include "obstacle.h"
-#include "bulletDebugDraw.h" 
+#include "mesh_instance.h"
+#include "cell.h"
+#include "level_manager.h"
+#include "cell_enum.h"
+#include "font.h"
+#include "font_character.h"
 
 int window_width = 600;
 int window_height = 600;
@@ -46,12 +48,14 @@ const std::string WINDOW_TITLE = "Game";
 
 float aspectRatio = window_width / window_height;
 
-int fov = 70;
+int fov = 50;
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
+
 
 int main()
 {
@@ -93,60 +97,84 @@ int main()
 	std::vector<GameActor*> actors;
 
 
-	std::vector<std::vector<GLfloat>> vertices;
+	
 
 	std::string assetsPath = std::string(ASSETS_PATH);
 
-	open_obj(assetsPath + "/test.obj", &vertices);
 
+	
+	//-------------------------SHADERS------------------------------------
 	Shader shader = Shader("standart.vertex", "standart.fragment", true);
 	shader.Use();
 	glUniform1i(glGetUniformLocation(shader.ID, "oText"), 0);
 	glUniform1i(glGetUniformLocation(shader.ID, "sText"), 1);
 	glUniform1i(glGetUniformLocation(shader.ID, "nText"), 2);
 
+	Shader fontShader = Shader("font.vertex", "font.fragment", true);
+	fontShader.Use();
+	glUniform1i(glGetUniformLocation(shader.ID, "tex"), 0);
+	//-------------------------------------------------------------------
+
+
+	//------------------------TEXTURES-----------------------------------
+
 	Texture* diffuse_test = create_texture(assetsPath + "/fabric.png");
 	Texture* normal = create_texture(assetsPath + "/fabric_normal.png");
 	Texture* spec = create_texture(assetsPath + "/fabric_spec.png");
 
-	Mesh* vg = new Mesh(vertices[0], &shader);
+	Texture* fontTexture = create_texture(assetsPath + "/font.png");
+	//----------------------------------------------------------------
 
+	//------------------------MESH LOADING-------------------------
+	std::vector<std::vector<GLfloat>> vertices;
+	open_obj(assetsPath + "/cell_walk.obj", &vertices);
+	Mesh* cell_walk_mesh = new Mesh(vertices[0], &shader);
+	vertices.clear();
+	open_obj(assetsPath + "/cell_stand.obj", &vertices);
+	Mesh* cell_stand_mesh = new Mesh(vertices[0], &shader);
+	//--------------------------------------------------------
+
+
+	//-------------------------MATERIALS----------------------------
+	Material* material = new Material();
+	material->use_diffuse = true;
+	material->diffuse_texture = diffuse_test;
+
+	cell_stand_mesh->material = material;
+	cell_walk_mesh->material = material;
+	//---------------------------------------------
 	
-	
-
-	Material* mat = new Material();
-
-	vg->material = mat;
-
-	vg->material->diffuse_texture = diffuse_test;
-	vg->material->normalmap_texture = normal;
-	vg->material->use_normalmap = true;
-
-	vg->material->specular_texture = spec;
-	vg->material->use_specular = true;
-
-	vg->material->use_diffuse = true;
-
+	//-----------------------LIGTHS--------------------------
 	std::vector<PointLight*> lights;
 
 	PointLight* p = new PointLight();
 
-	p->color = glm::vec3(0.0f, 1.0f, 0.0f);
-	p->strength = 6.0;
-	p->radius = 15.0;
-	p->transform.position.y = 3;
-		p->transform.position.x = 5;
-
-	PointLight* p2 = new PointLight();
-
-	p2->color = glm::vec3(1.0f, 0.0f, 0.0f);
-	p2->strength = 6.0;
-	p2->radius = 15.0;
-
+	p->color = glm::vec3(1.0f, 1.0f, 1.0f);
+	p->strength = 2.0;
+	p->radius = 20.0;
+	p->transform.position.y = 5;
+	p->transform.position.x = 10;
+	p->transform.position.z = 10;
+	
 	lights.push_back(p);
-	lights.push_back(p2);
-	p2->transform.position.y = 6;
 
+
+	PointLight* red = new PointLight();
+
+	red->color = glm::vec3(1.0f, 0.0f, 0.0f);
+	lights.push_back(red);
+
+	PointLight* green = new PointLight();
+	green->color = glm::vec3(0.0f, 1.0f, 0.0f);
+	lights.push_back(green);
+
+	//---------------------------------------------------
+
+
+
+	//-------------------FONT-----------------------------
+	Font font = Font(&fontShader, fontTexture);
+	//-----------------------------------------
 	
 
 
@@ -156,48 +184,56 @@ int main()
 	bool left_mouse_clicked = false;
 	float horizontalAngle = 3.14f;
 	float verticalAngle = 0.0f;
-	float speed = 0.55f;
+	float speed = 0.05f;
 
-	vg->transform.scale *= 10.0f;
-	vg->material->uv_scale = glm::vec2(10.0f, 10.0f);
 
-	//---------------------------PHYSICS--------------------------------------
-	btBroadphaseInterface* broadphase = new btDbvtBroadphase();
-	// Set up the collision configuration and dispatcher
-	btDefaultCollisionConfiguration* collisionConfiguration = new btDefaultCollisionConfiguration();
-	btCollisionDispatcher* dispatcher = new btCollisionDispatcher(collisionConfiguration);
-	// The actual physics solver
-	btSequentialImpulseConstraintSolver* solver = new btSequentialImpulseConstraintSolver;
-	// The world.
-	btDiscreteDynamicsWorld* dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher, broadphase, solver, collisionConfiguration);
-	dynamicsWorld->setGravity(btVector3(0, -9.81f, 0));
 
-	BulletDebugDraw* bulletDebugDraw = new BulletDebugDraw();
-//
-	dynamicsWorld->setDebugDrawer(bulletDebugDraw);
-	//---------------------------------------------------------
+	Camera* camera = new Camera();
 
-	dynamicsWorld->getSolverInfo().m_numIterations = 1;
+
+	//--------------------------LEVEL-----------------------------
+
+	LevelManager levelManager = LevelManager();
+
+	levelManager.loadLevel(assetsPath + "/level0.map");
+
+	for (int x = 0; x < 9; x++) {
+		for (int z = 0; z < 9; z++) {
+			Cell* cell = new Cell();
+			cell->transform.position.x = x*2;
+			cell->transform.position.z = z*2;
+			if (levelManager.getCellType(x, z) == CellType::STAND) {
+				cell->setMesh(cell_stand_mesh);
+			}
+			if (levelManager.getCellType(x, z) == CellType::WALK) {
+				cell->setMesh(cell_walk_mesh);
+			}
+
+			if (levelManager.getCellType(x, z) == CellType::PATH) {
+				cell->setMesh(cell_walk_mesh);
+			}
+
+			if (levelManager.getCellType(x, z) == CellType::START) {
+				cell->setMesh(cell_walk_mesh); //TODO: create new mesh
+				red->transform.position = glm::vec3(x, 0.0f, z) * 2.0f;
+			}
+
+			if (levelManager.getCellType(x, z) == CellType::END) {
+				cell->setMesh(cell_walk_mesh); //TODO: create new mesh
+				green->transform.position = glm::vec3(x, 0.0f, z) * 2.0f ;
+			}
+			
+			actors.push_back(cell);
+		}
+	}
+
 	
-	Transform player_transform = Transform();
-	player_transform.position.y = 10;
-	btCollisionShape* player_collision = new btCapsuleShape(0.7, 1.74f);
-	Player* player = new Player(dynamicsWorld, player_collision, 5, player_transform);
+	//
 
-	Camera* camera = &player->camera;
-	actors.push_back(player);
-
-	btCollisionShape* col_col = new btBoxShape(btVector3(10.0, 0.2, 10.0));
-	Obstacle* obs = new Obstacle(dynamicsWorld, col_col, 0);
-
-	obs->mesh = vg;
-	actors.push_back(obs);
-
-	
 
 	while (!glfwWindowShouldClose(window))
 	{
-		glClearColor(0.0f, 0.0f, 0.2f, 1.0f); //bg color
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //bg color
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
@@ -239,21 +275,20 @@ int main()
 		glm::vec3 dir = glm::vec3(0.0, 0.0, 0.0);
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-			dir = (direction * speed );
+			camera->position += (direction * speed );
 			
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-			dir = -direction * speed;
+			camera->position += -direction * speed;
 		}
 		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-			dir = right * speed;
+			camera->position += right * speed;
 		}
 		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-			dir = -right * speed;
+			camera->position += -right * speed;
 		}
 
 
-		player->rigidbody->rigidBody->applyCentralImpulse(btVector3(dir.x, dir.y, dir.z));
 
 		camera->view = glm::lookAt(
 			camera->position,           // Camera is here
@@ -261,14 +296,33 @@ int main()
 			up                  // Head is up (set to 0,-1,0 to look upside-down)
 		);
 
-		dynamicsWorld->stepSimulation(1.0f / 60.0f);
-		dynamicsWorld->debugDrawWorld();
+		glm::mat4 projection(1.0f);
+		projection = glm::perspective(fov / 180.0f * 3.14f, aspectRatio, 0.1f, 500.0f);
 
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+	
+		float x = (2.0f * xpos) / window_width - 1.0f;
+		float y = 1.0f - (2.0f * ypos) / window_height;
+
+
+		glm::vec4 screenPos = glm::vec4(x,y , 1.0f, 1.0f);
+		glm::mat4 inverseProjection = glm::inverse(projection);
+		glm::mat4 inverseView = glm::inverse(camera->view);
+		glm::vec4 worldPos = inverseProjection * screenPos;
+		worldPos = inverseView * worldPos;
+		worldPos /= worldPos.w;
+
+
+		glm::vec3 rayDirection = glm::normalize(glm::vec3(worldPos) - camera->position);
+
+		float t = -camera->position.y / rayDirection.y; 
+
+		glm::vec3 mouseWorldPos = camera->position + t * rayDirection;
 		
 
-
-		glm::mat4 projection(1.0f);
-		projection = glm::perspective(fov / 180.0f * 3.14f, aspectRatio, 0.1f, 1000.0f);
+		
+		
 
 		shader.Use();
 		shader.setVec3("lightColor", glm::vec3(1.0, 1.0, 1.0));
@@ -277,8 +331,6 @@ int main()
 		shader.setMat4("view", camera->view);
 
 
-
-		player->update();
 
 		int n = 0;
 		for (PointLight* light : lights) {
@@ -295,7 +347,7 @@ int main()
 			actor->draw();
 		}
 
-
+		font.draw("hello world", glm::vec2(-10.6, -10.6));
 
 
 		glBindVertexArray(0);
