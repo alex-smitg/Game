@@ -79,7 +79,6 @@ Temporary Items
 # Generated files
 bin/
 gen/
-out/
 #  Uncomment the following line in case you need and you don't have the release build type files in your app
 # release/
 
@@ -415,8 +414,7 @@ cmake-build-*/
 # File-based project format
 *.iws
 
-# IntelliJ
-out/
+
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -1043,3 +1041,7 @@ dkms.conf
 *.uf2
 # Raspberry Pi Pico disassembler file
 *.dis
+
+
+!lib/**
+!ASSETS/*
