@@ -32,6 +32,7 @@
 #include "font.h"
 #include "player.h"
 #include "mesh_instance_spawner.h"
+#include "enemy.h"
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
@@ -82,6 +83,16 @@ int main() {
 
     MeshInstanceSpawner bulletSpawner(assetManager.getMesh("bullet.obj"), assetManager.getShader("standart"), assetManager.getMaterial("test"), "bullet");
 
+    MeshInstanceSpawner enemySpawner(assetManager.getMesh("ship01.obj"), assetManager.getShader("standart"), assetManager.getMaterial("test"), "enemy");
+
+
+    Actor* enemy_parent = new Actor();
+    enemy_parent->name = "enemies";
+    scene.addChild(enemy_parent);
+    
+
+   
+
 
     MeshInstance* meshInstance = new MeshInstance("Arrow_player");
     meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
@@ -110,6 +121,13 @@ int main() {
     playerController.player = &player;
 
 
+    
+   
+
+    int spawn_enemy_every = 60;
+    int enemy_spawn_countdown = spawn_enemy_every;
+
+    
 
     const double targetFPS = 60.0;
     const double frameDuration = 1.0 / targetFPS; // 0.01666...
@@ -149,9 +167,25 @@ int main() {
                 player.transform.position.y = camera_y_st;
             }
 
-    
+            enemy_spawn_countdown -= 1;
+
+            if (enemy_spawn_countdown <= 0) {
+                enemy_spawn_countdown = spawn_enemy_every;
+
+                Enemy* enemy = new Enemy();
+                enemy->transform = player.transform;
+                enemy->transform.position.z = player.transform.position.z;
+                enemy->transform.position.y = camera_y_st + 20.0;
+
+                MeshInstance* mi = enemySpawner.spawn(enemy);
+                enemy_parent->addChild(enemy);
+
+                
+            }
 
             camera.transform.position = player.transform.position;
+
+            camera.transform.position.x = 0.0f;
             camera.transform.position.z += 25;
             camera.transform.position.y = camera_y_st;
             camera.transform.rotation.x = 0.4;
@@ -174,6 +208,24 @@ int main() {
             standart->setMat4("projection", camera.projection);
 
 
+            for (Actor* actor : scene.getChild("player")->findChild("bullets")->getChildren()) {
+                Bullet* bullet = static_cast<Bullet*>(actor);
+
+                for (Actor* _actor : scene.getChild("enemies")->getChildren()) {
+                    Enemy* enemy = static_cast<Enemy*>(_actor);
+
+                    float dist_square = glm::dot(glm::vec2(bullet->transform.position.x, bullet->transform.position.y ),
+                        glm::vec2(bullet->transform.position.x, bullet->transform.position.y));
+
+
+
+                    if (dist_square < enemy->radius * enemy->radius) {
+                        bullet->destroy();
+
+                        
+                    }
+                }
+            }
 
             scene.draw();
 

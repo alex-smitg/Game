@@ -28,6 +28,8 @@ public:
 	void draw() {
 		Actor::draw();
 	}
+
+
 };
 
 

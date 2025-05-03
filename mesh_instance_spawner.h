@@ -17,9 +17,9 @@ public:
 	Material* material = nullptr;
 
 
-	int count = 0;
+	int count = 0; //
 
-	std::string name = "";
+	std::string name = ""; 
 
 	MeshInstanceSpawner(Mesh* mesh, Shader* shader, Material* material, std::string name) {
 		this->mesh = mesh;
