@@ -18,8 +18,11 @@ public:
 
 	glm::vec3 direction = glm::vec3(0.0, 0.0, 0.0);
 
+	float livetime = 0;
+
 	void update() {
 		Actor::update();
+		livetime += 1;
 
 		transform.position += direction * speed;
 	}

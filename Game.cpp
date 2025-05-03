@@ -66,7 +66,6 @@ int main() {
     alSourcei(source, AL_BUFFER, buffer);
     alSourcePlay(source);
 
-    std::cout << "Playing sound...\n";
     alGetError(); 
 
     ALint state;
@@ -147,7 +146,7 @@ int main() {
 
    
 
-    int spawn_enemy_every = 60;
+    int spawn_enemy_every = 40;
     int enemy_spawn_countdown = spawn_enemy_every;
 
 
@@ -159,11 +158,15 @@ int main() {
     const double frameDuration = 1.0 / targetFPS; // 0.01666...
 
 
-    float kill_hide_countdown = 60;
+    float kill_hide_countdown = 0;
     float sc = 0;
     float camera_y_st = 0;
 
     std::string last_killed = "";
+
+    float hard = 1.0;
+
+    float die_countdown = 20.0f;
 
     double lastTime = glfwGetTime();
 
@@ -179,9 +182,17 @@ int main() {
         float aspectRatio = 1.0;
 
 
+
         if (delta >= frameDuration) {
             window.pollEvents();
 
+            if (lives < 0 || die_countdown <= 0) {
+                break;
+            }
+
+            die_countdown -= 0.06;
+
+            hard += 0.0004f;
 
             playerController.processInput(&window);
            
@@ -198,13 +209,28 @@ int main() {
 
             enemy_spawn_countdown -= 1;
 
+            
+
             if (enemy_spawn_countdown <= 0) {
-                enemy_spawn_countdown = spawn_enemy_every;
+                enemy_spawn_countdown = spawn_enemy_every / hard;
 
                 Enemy* enemy = new Enemy();
+
+                glm::vec3 dir = glm::vec3(0.0);
+                glm::vec2 dir2 = glm::normalize(glm::vec2(player.transform.position.x + (random.randfloat()*3.0-1.5), player.transform.position.y) -
+                    glm::vec2(enemy->transform.position.x, enemy->transform.position.y));
+                dir.x = dir2.x + (random.randfloat() * 0.5 - 0.25);
+                dir.y = -dir2.y;
+
+                enemy->speed = 0.2 * hard;
+
+
+                enemy->direction = dir;
+                enemy->health = hard * 2;
+                enemy->countdown_max /= hard * 1;
                 enemy->transform = player.transform;
                 enemy->transform.position.z = player.transform.position.z;
-                enemy->transform.position.x = 0;
+                enemy->transform.position.x = random.randfloat() * 40.0 - 20.0;
                 enemy->transform.position.y = camera_y_st + 40.0;
 
                 enemies.push_back(enemy);
@@ -222,25 +248,50 @@ int main() {
             scene.getChild("terrain")->transform.position.y += 6;
             scene.getChild("terrain")->transform.position.z -=  40;*/
 
+
+            
             Actor* actor = scene.getChild("Arrow_player");
             actor->transform = player.transform;
+            if (inv > 0) {
+                if (inv % 10 == 0) {
+                    actor->visible = false;
+                }
+
+                if (inv % 15 == 0) {
+                    actor->visible = true;
+                } 
+                
+            }
+            else {
+                actor->visible = true;
+            }
 
 
 
+            std::unordered_set<Bullet*> deleted_bullets;
 
+            std::unordered_set<Enemy*> deleted_enemies;
 
             scene.update();
             for (Bullet* bullet : bullets) {
                 bullet->update();
+                if (bullet->livetime >= 60 * 8) {
+                    deleted_bullets.insert(bullet);
+                }
             }
             for (Enemy* enemy : enemies) {
                 enemy->update();
+
+                if (enemy->livetime >= 60 * 8) {
+                    deleted_enemies.insert(enemy);
+                    score -= 10;
+                }
 
                 if (enemy->countdown <= 0) {
                     Bullet* bullet = new Bullet();
                     bullet->transform = enemy->transform;
                     enemy->countdown = enemy->countdown_max;
-                    bullet->speed = 0.5;
+                    bullet->speed = 0.3;
                     bullet->is_enemy = true;
                     glm::vec3 dir = glm::vec3(0.0);
                     glm::vec2 dir2 = glm::normalize(glm::vec2(player.transform.position.x, player.transform.position.y) - 
@@ -250,7 +301,19 @@ int main() {
 
                     bullet->direction = dir;
                     bullets.push_back(bullet);
+
+
+                    if (inv < 0) {
+                        glm::vec2 delta = enemy->transform.position - player.transform.position;
+                        float dist_square = glm::dot(delta, delta);
+                        if (dist_square < 4) {
+                            lives -= 1;
+                            inv = 180;
+                        }
+                    }
                 }
+
+                
             }
 
             Shader* standart = assetManager.getShader("standart");
@@ -260,7 +323,7 @@ int main() {
 
             inv -= 1;
 
-            std::unordered_set<Bullet*> deleted_bullets;
+          
             for (Bullet* bullet : bullets) {
 
                 if (!bullet->is_enemy) {
@@ -276,17 +339,28 @@ int main() {
                             enemy->health -= bullet->damage;
                             break;
                         }
+
+   
+                        
                     }
                 }
                 else {
                     if (inv < 0) {
                         glm::vec2 delta = bullet->transform.position - player.transform.position;
                         float dist_square = glm::dot(delta, delta);
+                        
 
-                        if (dist_square < 4) {
+                        if (dist_square < 2) {
                             lives -= 1;
                             inv = 180;
+
+                            deleted_bullets.insert(bullet);
                         }
+
+
+                        
+
+                       
                     }
                 }
             }
@@ -308,13 +382,16 @@ int main() {
                 bullet->draw();
             }
 
-            std::unordered_set<Enemy*> deleted_enemies;
+            kill_hide_countdown -= 1;
+
+            
             for (Enemy* enemy : enemies) {
                 if (enemy->health <= 0) {
                     deleted_enemies.insert(enemy);
                     score += enemy->score_kill;
                     last_killed = random.generate_random_name();
                     kill_hide_countdown = 180;
+                    die_countdown += 10;
                     sc = (random.randfloat() + 1.0);
                     score += last_killed.size() * 252.0 * sc ;
                 }
@@ -356,13 +433,21 @@ int main() {
             font.draw(
                 "score >" + std::to_string(score) + "\n" +
                 "x" + std::to_string(lives) + "\n" +
-                "p > f" + "\n"
+                "co >" + std::to_string(hard-1.0) + "\n"
                 
                 , glm::vec2(1.5, logicalHeight - 5.0), &proj);
 
+            font.color = glm::vec3(1.0, 0.0, 0.0);
             if (kill_hide_countdown > 0) {
                 font.draw("you killed >" + last_killed + " +" + std::to_string(last_killed.size()*252.0*sc), glm::vec2(1.5, 1.5), &proj);
             }
+
+            font.color = glm::vec3(1.0, 0.0, 0.0);
+
+            font.draw(
+                std::to_string(die_countdown) + "\n"
+
+                , glm::vec2(logicalWidth /2, logicalHeight - 3.0), & proj);
 
 
             
@@ -374,7 +459,17 @@ int main() {
             window.swapBuffers();
         }
     }
+    glfwTerminate();
+    alDeleteSources(1, &source);
+    alDeleteBuffers(1, &buffer);
+    alcMakeContextCurrent(nullptr);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
 
+    std::cout << "Конец" << "\n";
+    std::cout << score << std::endl;
+
+    system("pause");
 
 	return 0;
 }

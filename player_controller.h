@@ -7,7 +7,7 @@
 class PlayerController {
 public:
 	Player* player;
-	float speed = 0.2f;
+	float speed = 0.4f;
 	float sensitivity = 0.004f;
 
 

@@ -50,7 +50,7 @@ public:
 				shader->setBool("use_diffuse", false);
 			}
 		}
-		if (mesh != nullptr) {
+		if (mesh != nullptr && visible) {
 			mesh->draw();
 		}
 
