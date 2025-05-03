@@ -27,7 +27,7 @@ public:
 private:
 	unsigned int VBO, VAO;
 	std::vector<GLfloat> vertices;
-	int vertex_stride = 14 * sizeof(GLfloat); //vertices = {{x, y, z, u, v, nx, ny, nz}, ....} 
+	int vertex_stride = 8 * sizeof(GLfloat); //vertices = {{x, y, z, u, v, nx, ny, nz}, ....} 
 
 	void init() {
 		glGenVertexArrays(1, &VAO);

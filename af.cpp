@@ -75,23 +75,10 @@
 //	glfwSetKeyCallback(window, key_callback);
 //	glfwSetMouseButtonCallback(window, mouse_button_callback);
 //
-//	if (window == nullptr)
-//	{
-//		std::cout << "Failed to create GLFW window" << std::endl;
-//		glfwTerminate();
-//		return -1;
-//	}
+
+
 //
-//	glfwMakeContextCurrent(window);
-//	glEnable(GL_DEPTH_TEST);
-//	glEnable(GL_CULL_FACE);
-//
-//
-//	if (glewInit() != GLEW_OK)
-//	{
-//		std::cout << "Failed to initialize GLEW" << std::endl;
-//		return -1;
-//	}
+//	
 //
 //
 //

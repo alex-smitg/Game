@@ -7,48 +7,16 @@
 
 #include <GL/glew.h>
 
-#include "shaders.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
+#include <string>
 
 class Shader
 {
 public:
 	unsigned int ID = 0;
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath, bool load_text = false) {
-		std::string vertexCode;
-		std::string fragmentCode;
-		std::ifstream vShaderFile;
-		std::ifstream fShaderFile;
-		vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-		try
-		{
-			if (load_text == false) {
-			vShaderFile.open(vertexPath);
-			fShaderFile.open(fragmentPath);
-			std::stringstream vShaderStream, fShaderStream;
-
-			vShaderStream << vShaderFile.rdbuf();
-			fShaderStream << fShaderFile.rdbuf();
-
-			vShaderFile.close();
-			fShaderFile.close();
-
-			vertexCode = vShaderStream.str();
-			fragmentCode = fShaderStream.str();
-			}
-			else {
-				vertexCode = shaders[vertexPath];
-				fragmentCode = shaders[fragmentPath];
-			}
-		}
-		catch (std::ifstream::failure& e)
-		{
-			std::cout << e.what();
-		}
+	Shader(std::string vertexCode, std::string fragmentCode) {
 		const char* vShaderCode = vertexCode.c_str();
 		const char* fShaderCode = fragmentCode.c_str();
 
