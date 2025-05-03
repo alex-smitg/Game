@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_set>
 
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -36,7 +37,6 @@
 #include "player_controller.h"
 #include "font.h"
 #include "player.h"
-#include "mesh_instance_spawner.h"
 #include "enemy.h"
 #include "sound.h"
 
@@ -90,41 +90,33 @@ int main() {
     assetManager.createMaterial("test");
     Scene scene;
 
-
-    for (int i = 0; i < 30; i++) {
-        MeshInstance* meshInstance = new MeshInstance("Arrow" + std::to_string(i));
-        meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
-        meshInstance->setShader(assetManager.getShader("standart"));
-        meshInstance->setMaterial(assetManager.getMaterial("test"));
-        meshInstance->transform.position.z = random.randfloat() * 80.0f - 40.0f;
-        meshInstance->transform.position.y = random.randfloat() * 80.0f - 40.0f;
-        meshInstance->transform.position.x = random.randfloat() * 80.0f - 40.0f;
-        scene.addChild(meshInstance);
-    }
-
-
     assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
 
-    
+
+
+
+    std::vector<Enemy*> enemies;
+    std::vector<Bullet*> bullets;
 
     Player player;
     player.setName("player");
     scene.addChild(&player);
+    player.bullets = &bullets;
 
 
 
-    MeshInstanceSpawner bulletSpawner(assetManager.getMesh("bullet.obj"), assetManager.getShader("standart"), assetManager.getMaterial("test"), "bullet");
+    MeshInstance* bulletInstance = new MeshInstance("Bullet");
+    bulletInstance->setMesh(assetManager.getMesh("bullet.obj"));
+    bulletInstance->setShader(assetManager.getShader("standart"));
+    bulletInstance->setMaterial(assetManager.getMaterial("test"));
 
-    MeshInstanceSpawner enemySpawner(assetManager.getMesh("ship01.obj"), assetManager.getShader("standart"), assetManager.getMaterial("test"), "enemy");
 
 
-    Actor* enemy_parent = new Actor();
-    enemy_parent->name = "enemies";
-    scene.addChild(enemy_parent);
+    MeshInstance* enemyInstance = new MeshInstance("Enemy");
+    enemyInstance->setMesh(assetManager.getMesh("ship01.obj"));
+    enemyInstance->setShader(assetManager.getShader("standart"));
+    enemyInstance->setMaterial(assetManager.getMaterial("test"));
     
-
-   
-
 
     MeshInstance* meshInstance = new MeshInstance("Arrow_player");
     meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
@@ -142,10 +134,7 @@ int main() {
     Font font(assetManager.getShader("font"), assetManager.getTexture("font.png"));
 
 
-    Actor* bullets = new Actor();
-    bullets->setName("bullets");
-    player.addChild(bullets);
-    player.meshInstanceSpawner = &bulletSpawner;
+    
     
     scene.addChild(&camera);
 
@@ -159,6 +148,9 @@ int main() {
     int spawn_enemy_every = 60;
     int enemy_spawn_countdown = spawn_enemy_every;
 
+
+    int lives = 3;
+    int score = 0;
     
 
     const double targetFPS = 60.0;
@@ -207,11 +199,10 @@ int main() {
                 Enemy* enemy = new Enemy();
                 enemy->transform = player.transform;
                 enemy->transform.position.z = player.transform.position.z;
-                enemy->transform.position.y = camera_y_st + 20.0;
+                enemy->transform.position.x = 0;
+                enemy->transform.position.y = camera_y_st + 40.0;
 
-                MeshInstance* mi = enemySpawner.spawn(enemy);
-                enemy_parent->addChild(enemy);
-
+                enemies.push_back(enemy);
                 
             }
 
@@ -226,41 +217,78 @@ int main() {
             scene.getChild("terrain")->transform.position.y += 6;
             scene.getChild("terrain")->transform.position.z -=  40;*/
 
-            scene.getChild("Arrow1")->transform = player.transform;
-
             Actor* actor = scene.getChild("Arrow_player");
             actor->transform = player.transform;
 
 
             scene.update();
+            for (Bullet* bullet : bullets) {
+                bullet->update();
+            }
+            for (Enemy* enemy : enemies) {
+                enemy->update();
+            }
 
             Shader* standart = assetManager.getShader("standart");
             standart->use();
             standart->setMat4("view", camera.view);
             standart->setMat4("projection", camera.projection);
 
+            std::unordered_set<Bullet*> deleted_bullets;
+            for (Bullet* bullet : bullets) {
+                for (Enemy* enemy : enemies) {
 
-            for (Actor* actor : scene.getChild("player")->findChild("bullets")->getChildren()) {
-                Bullet* bullet = static_cast<Bullet*>(actor);
-
-                for (Actor* _actor : scene.getChild("enemies")->getChildren()) {
-                    Enemy* enemy = static_cast<Enemy*>(_actor);
-
-                    float dist_square = glm::dot(glm::vec2(bullet->transform.position.x, bullet->transform.position.y ),
-                        glm::vec2(bullet->transform.position.x, bullet->transform.position.y));
+                    glm::vec2 delta = bullet->transform.position - enemy->transform.position;
+                    float dist_square = glm::dot(delta, delta);
 
 
 
                     if (dist_square < enemy->radius * enemy->radius) {
-                        bullet->destroy();
-
-                        
+                        deleted_bullets.insert(bullet); 
+                        enemy->health -= bullet->damage;
+                        break;
                     }
                 }
             }
 
-            scene.draw();
 
+        
+
+
+            for (Bullet* bullet : deleted_bullets) {
+                bullets.erase(std::remove(bullets.begin(), bullets.end(), bullet), bullets.end());
+                delete bullet;
+            }
+
+
+            for (Bullet* bullet : bullets) {
+                bulletInstance->transform = bullet->transform;
+                bulletInstance->draw();
+
+                bullet->draw();
+            }
+
+            std::unordered_set<Enemy*> deleted_enemies;
+            for (Enemy* enemy : enemies) {
+                if (enemy->health <= 0) {
+                    deleted_enemies.insert(enemy);
+                }
+
+                enemyInstance->transform = enemy->transform;
+                enemyInstance->draw();
+
+
+
+                enemy->draw();
+            }
+
+            for (Enemy* enemy : deleted_enemies) {
+                enemies.erase(std::remove(enemies.begin(), enemies.end(), enemy), enemies.end());
+                delete enemy;
+            }
+
+
+            scene.draw();
 
             glDisable(GL_CULL_FACE);
             glClear(GL_DEPTH_BUFFER_BIT);

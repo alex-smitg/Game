@@ -14,13 +14,10 @@ public:
 	bool is_enemy = false;
 
 	float speed = 2.0;
+	int damage = 1.0;
 
 	void update() {
 		Actor::update();
-
-		for (Actor* actor : childrens) {
-			actor->transform = transform;
-		}
 
 		transform.position.y += speed;
 	}

@@ -9,18 +9,17 @@
 
 #include "bullet.h"
 
+
 class Player : public Actor {
 public:
 
-    MeshInstanceSpawner *meshInstanceSpawner;
+
+    std::vector<Bullet*> *bullets;
 
     void shoot() {
-        Actor* parent = findChild("bullets");
-        MeshInstance* mi = meshInstanceSpawner->spawn(parent);
         Bullet* bullet = new Bullet();
-        bullet->addChild(mi);
-        parent->addChild(bullet);
         bullet->transform = transform;
+        bullets->push_back(bullet);
     }
 
     void draw() {

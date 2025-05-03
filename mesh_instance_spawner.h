@@ -34,7 +34,6 @@ public:
 		meshInstance->setMesh(mesh);
 		meshInstance->setShader(shader);
 		meshInstance->setMaterial(material);
-		parent->addChild(meshInstance);
 		count += 1;
 		return meshInstance;
 	}

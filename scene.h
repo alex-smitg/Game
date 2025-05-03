@@ -37,12 +37,6 @@ public:
 		return childrens[name];
 	}
 
-	std::vector<Actor*> getChildren(std::string name) {
-		if (childrens.count(name) == 0) {
-			std::cout << "NO CHILD WITH NAME: " << name << std::endl;
-		}
-		return childrens[name]->childrens;
-	}
 
 
 

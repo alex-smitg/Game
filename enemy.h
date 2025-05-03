@@ -4,19 +4,21 @@
 
 #include "actor.h"
 
+enum Movement {SIN};
+
 class Enemy : public Actor {
 public:
-	float damage = 100;
-	float radius = 20;
-	float health = 10;
+	int damage = 1;
+	float radius = 1;
+	int health = 1;
 
+
+	enum Movement
 
 	void update() {
 		Actor::update();
 
-		for (Actor* actor : childrens) {
-			actor->transform = transform;
-		}
+		
 	}
 
 	void draw() {
