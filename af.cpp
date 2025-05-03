@@ -257,9 +257,7 @@
 //
 //	while (!glfwWindowShouldClose(window))
 //	{
-//		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //bg color
-//		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//		
 //
 //		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
 //

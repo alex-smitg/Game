@@ -43,7 +43,7 @@ public:
 
 
 	}
-	void Use() {
+	void use() {
 		glUseProgram(ID);
 	}
 

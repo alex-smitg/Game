@@ -4,9 +4,12 @@
 #include <map>
 
 #include "mesh.h"
-#include "models.h"
+#include "material.h"
 #include "shader.h"
+
+#include "models.h"
 #include "shaders.h"
+
 
 class AssetManager {
 public:
@@ -15,6 +18,7 @@ public:
 	AssetManager() {
 		for (auto const& [name, vertices] : models) {
 			Mesh* mesh = new Mesh(vertices);
+			meshes[name] = mesh;
 		}
 
 
@@ -29,12 +33,24 @@ public:
 		return meshes[name];
 	}
 
-	Shader* getShader(std::string name) {
+	Shader* getShader(std::string name)  {
 		return _shaders[name];
 	}
+
+	Material* createMaterial(std::string name) {
+		Material* material = new Material();
+		_materials[name] = material;
+		return material;
+	}
+	Material* getMaterial(std::string name) {
+		return _materials[name];
+	}
+
+
 private:
 	std::map<std::string, Mesh*> meshes;
 	std::map<std::string, Shader*> _shaders;
+	std::map<std::string, Material*> _materials;
 
 };
 

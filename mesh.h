@@ -7,6 +7,9 @@
 
 #include <vector>
 
+
+const int VALUES_PER_VERTEX = 8; //vertices = {{x, y, z, u, v, nx, ny, nz}, ....}  
+
 class Mesh {
 public:
 	Mesh(std::vector<GLfloat> vertices) {
@@ -21,13 +24,14 @@ public:
 
 	void draw() {
 		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / vertex_stride);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / VALUES_PER_VERTEX);
 	}
+
 
 private:
 	unsigned int VBO, VAO;
 	std::vector<GLfloat> vertices;
-	int vertex_stride = 8 * sizeof(GLfloat); //vertices = {{x, y, z, u, v, nx, ny, nz}, ....} 
+	int vertex_stride = VALUES_PER_VERTEX * sizeof(GLfloat); //vertices = {{x, y, z, u, v, nx, ny, nz}, ....} 
 
 	void init() {
 		glGenVertexArrays(1, &VAO);
