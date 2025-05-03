@@ -37,7 +37,7 @@ uniform mat4 projection;
 
 void main() {
 	if (in_world==false) {
-	gl_Position = projection * vec4((aPos.x+position.x), (aPos.y+position.y), 0.0, 1.0); 
+		gl_Position = projection * vec4((aPos.x+position.x), (aPos.y+position.y), 0.0, 1.0); 
 	} else {
 
 

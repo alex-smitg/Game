@@ -50,7 +50,7 @@ public:
 		standart->use();
 		glUniform1i(glGetUniformLocation(standart->ID, "oText"), 0);
 
-		Shader* font = new Shader(shaders["font.vertex"], shaders["standart.fragment"]);
+		Shader* font = new Shader(shaders["font.vertex"], shaders["font.fragment"]);
 		font->use();
 		glUniform1i(glGetUniformLocation(font->ID, "tex"), 0);
 

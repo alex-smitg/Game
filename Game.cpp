@@ -30,6 +30,7 @@
 #include "random.h"
 #include "camera_controller.h"
 #include "font.h"
+#include "player.h"
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
@@ -61,8 +62,12 @@ int main() {
 
     assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
 
+    
 
-   
+    Player player;
+
+    
+    Font font(assetManager.getShader("font"), assetManager.getTexture("font.png"));
 
     Scene scene;
     scene.addChild(meshInstance);
@@ -80,7 +85,7 @@ int main() {
 
     while (!window.shouldClose()) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(1.0f, 0.0f, 0.0f, 1.0f); //bg color
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //bg color
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         double currentTime = glfwGetTime();
@@ -99,6 +104,8 @@ int main() {
             cameraController.processKeyboard(window.getWindow(), delta);
             cameraController.processMouse(&window);
 
+            camera.transform = player.transform;
+
 
             Shader* standart = assetManager.getShader("standart");
             standart->use();
@@ -109,6 +116,35 @@ int main() {
             actor->transform.position.z = sin(glfwGetTime()) * 10.0;
 
             scene.draw();
+
+
+            glDisable(GL_CULL_FACE);
+            glClear(GL_DEPTH_BUFFER_BIT);
+
+
+
+            float logicalWidth = 100.0f; //????
+            float logicalHeight = logicalWidth / camera.aspectRatio;
+
+            glm::mat4 proj = glm::ortho(
+                0.0f, logicalWidth,
+                0.0f, logicalHeight,
+                -1.0f, 1.0f
+            );
+
+
+            assetManager.getShader("font")->use();
+
+            font.draw("hello hpw are you doing, im fine\n yes", glm::vec2(0.0, 0.0), &proj);
+
+
+            font.color = glm::vec3(1.0, 0.0, 0.0);
+            font.draw(std::to_string(glfwGetTime()), glm::vec2(glfwGetTime(), glfwGetTime()), &proj);
+            font.color = glm::vec3(1.0, 0.0, 1.0);
+
+            glEnable(GL_CULL_FACE);
+
+            glBindVertexArray(0);
 
             window.swapBuffers();
         }

@@ -39,7 +39,7 @@ public:
 		glEnable(GL_CULL_FACE);
 
 
-
+		
 
 		unsigned int pickingFBO;
 			glGenFramebuffers(1, &pickingFBO);
