@@ -16,10 +16,12 @@ public:
 	float speed = 2.0;
 	int damage = 1.0;
 
+	glm::vec3 direction = glm::vec3(0.0, 0.0, 0.0);
+
 	void update() {
 		Actor::update();
 
-		transform.position.y += speed;
+		transform.position += direction * speed;
 	}
 
 	void draw() {

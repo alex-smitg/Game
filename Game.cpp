@@ -103,6 +103,8 @@ int main() {
     scene.addChild(&player);
     player.bullets = &bullets;
 
+    
+
 
 
     MeshInstance* bulletInstance = new MeshInstance("Bullet");
@@ -142,7 +144,7 @@ int main() {
     playerController.player = &player;
 
 
-    
+
    
 
     int spawn_enemy_every = 60;
@@ -151,14 +153,17 @@ int main() {
 
     int lives = 3;
     int score = 0;
-    
+    int inv = 0;
 
     const double targetFPS = 60.0;
     const double frameDuration = 1.0 / targetFPS; // 0.01666...
 
 
+    float kill_hide_countdown = 60;
+    float sc = 0;
     float camera_y_st = 0;
 
+    std::string last_killed = "";
 
     double lastTime = glfwGetTime();
 
@@ -221,12 +226,31 @@ int main() {
             actor->transform = player.transform;
 
 
+
+
+
             scene.update();
             for (Bullet* bullet : bullets) {
                 bullet->update();
             }
             for (Enemy* enemy : enemies) {
                 enemy->update();
+
+                if (enemy->countdown <= 0) {
+                    Bullet* bullet = new Bullet();
+                    bullet->transform = enemy->transform;
+                    enemy->countdown = enemy->countdown_max;
+                    bullet->speed = 0.5;
+                    bullet->is_enemy = true;
+                    glm::vec3 dir = glm::vec3(0.0);
+                    glm::vec2 dir2 = glm::normalize(glm::vec2(player.transform.position.x, player.transform.position.y) - 
+                        glm::vec2(enemy->transform.position.x, enemy->transform.position.y));
+                    dir.x = dir2.x;
+                    dir.y = dir2.y;
+
+                    bullet->direction = dir;
+                    bullets.push_back(bullet);
+                }
             }
 
             Shader* standart = assetManager.getShader("standart");
@@ -234,19 +258,35 @@ int main() {
             standart->setMat4("view", camera.view);
             standart->setMat4("projection", camera.projection);
 
+            inv -= 1;
+
             std::unordered_set<Bullet*> deleted_bullets;
             for (Bullet* bullet : bullets) {
-                for (Enemy* enemy : enemies) {
 
-                    glm::vec2 delta = bullet->transform.position - enemy->transform.position;
-                    float dist_square = glm::dot(delta, delta);
+                if (!bullet->is_enemy) {
+                    for (Enemy* enemy : enemies) {
+
+                        glm::vec2 delta = bullet->transform.position - enemy->transform.position;
+                        float dist_square = glm::dot(delta, delta);
 
 
 
-                    if (dist_square < enemy->radius * enemy->radius) {
-                        deleted_bullets.insert(bullet); 
-                        enemy->health -= bullet->damage;
-                        break;
+                        if (dist_square < enemy->radius * enemy->radius) {
+                            deleted_bullets.insert(bullet);
+                            enemy->health -= bullet->damage;
+                            break;
+                        }
+                    }
+                }
+                else {
+                    if (inv < 0) {
+                        glm::vec2 delta = bullet->transform.position - player.transform.position;
+                        float dist_square = glm::dot(delta, delta);
+
+                        if (dist_square < 4) {
+                            lives -= 1;
+                            inv = 180;
+                        }
                     }
                 }
             }
@@ -272,6 +312,11 @@ int main() {
             for (Enemy* enemy : enemies) {
                 if (enemy->health <= 0) {
                     deleted_enemies.insert(enemy);
+                    score += enemy->score_kill;
+                    last_killed = random.generate_random_name();
+                    kill_hide_countdown = 180;
+                    sc = (random.randfloat() + 1.0);
+                    score += last_killed.size() * 252.0 * sc ;
                 }
 
                 enemyInstance->transform = enemy->transform;
@@ -307,18 +352,20 @@ int main() {
 
             assetManager.getShader("font")->use();
 
+            font.color = glm::vec3(1.0, 1.0, 1.0);
             font.draw(
-                std::to_string(player.transform.position.x) + "\n" +
-                std::to_string(player.transform.position.y) + "\n" +
-                std::to_string(player.transform.position.z) + "\n"
+                "score >" + std::to_string(score) + "\n" +
+                "x" + std::to_string(lives) + "\n" +
+                "p > f" + "\n"
                 
-                , glm::vec2(0.0, logicalHeight - 5.0), &proj);
+                , glm::vec2(1.5, logicalHeight - 5.0), &proj);
+
+            if (kill_hide_countdown > 0) {
+                font.draw("you killed >" + last_killed + " +" + std::to_string(last_killed.size()*252.0*sc), glm::vec2(1.5, 1.5), &proj);
+            }
 
 
-            font.color = glm::vec3(1.0, 0.0, 0.0);
-            font.draw(std::to_string(glfwGetTime())
-                , glm::vec2(glfwGetTime(), glfwGetTime()), &proj);
-            font.color = glm::vec3(1.0, 0.0, 1.0);
+            
 
             glEnable(GL_CULL_FACE);
 

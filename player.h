@@ -19,6 +19,7 @@ public:
     void shoot() {
         Bullet* bullet = new Bullet();
         bullet->transform = transform;
+        bullet->direction.y = 1.0;
         bullets->push_back(bullet);
     }
 
