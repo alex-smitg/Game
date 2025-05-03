@@ -17,7 +17,7 @@ add_definitions(-DASSETS_PATH="${ASSETS_PATH}")
 
 add_executable (Game "Game.cpp" )
 
-set(HEADER_FILE ${CMAKE_SOURCE_DIR}/packed_shaders.h)
+
 set(SCRIPT ${CMAKE_SOURCE_DIR}/packer.py)
 
 add_custom_target(
@@ -33,7 +33,6 @@ link_directories(${CMAKE_SOURCE_DIR}/lib/Debug)
 
 file(GLOB_RECURSE LIBRARIES "${CMAKE_SOURCE_DIR}/lib/Debug/*.lib")
 message(STATUS "Found libraries: ${LIBRARIES}")
-
 
 
 target_link_libraries(Game PRIVATE ${LIBRARIES} opengl32)
