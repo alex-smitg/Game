@@ -4,13 +4,14 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "actor.h"
 
 
 class Scene {
 public:
-	
+
 
 	void update() {
 		for (auto const& [name, actor] : childrens) {
@@ -30,8 +31,19 @@ public:
 	}
 
 	Actor* getChild(std::string name) {
+		if (childrens.count(name) == 0) {
+			std::cout << "NO CHILD WITH NAME: " << name << std::endl;
+		}
 		return childrens[name];
 	}
+
+	std::vector<Actor*> getChildren(std::string name) {
+		if (childrens.count(name) == 0) {
+			std::cout << "NO CHILD WITH NAME: " << name << std::endl;
+		}
+		return childrens[name]->childrens;
+	}
+
 
 
 private:

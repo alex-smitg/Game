@@ -14,9 +14,24 @@ public:
 
 	std::vector<Actor*> childrens;
 
+	
+
 	void setName(std::string name) {
 		this->name = name;
 	}
+
+	std::vector<Actor*> getChildren() {
+		return childrens;
+	}
+
+	Actor* findChild(std::string name) {
+		for (Actor* actor : childrens) {
+			if (actor->name == name) {
+				return actor;
+			}
+		}
+	}
+
 
 	void addChild(Actor* actor) {
 		childrens.push_back(actor);

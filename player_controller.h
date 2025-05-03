@@ -7,13 +7,14 @@
 class PlayerController {
 public:
 	Player* player;
-	float speed = 0.3f;
+	float speed = 0.2f;
 	float sensitivity = 0.004f;
 
 
-	glm::vec3 front;
-	glm::vec3 right;
-	glm::vec3 up;
+	float countdown_max = 10;
+	float countdown = countdown_max;
+
+
 
 	glm::vec3 velocity = glm::vec3(0.0, 0.0, 0.0);
 
@@ -55,54 +56,45 @@ public:
 	}
 
 	void processInput(Window* window) {
-		
 
-
-		glm::mat4 yawMat = glm::rotate(glm::mat4(1.0f), player->yaw, glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::mat4 pitchMat = glm::rotate(glm::mat4(1.0f), player->pitch, glm::vec3(1.0f, 0.0f, 0.0f));
-		glm::mat4 rollMat = glm::rotate(glm::mat4(1.0f), player->roll, glm::vec3(0.0f, 0.0f, 1.0f));
-
-		front = glm::normalize(glm::vec3(yawMat * pitchMat * rollMat * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f)));
-		right = glm::normalize(glm::cross(front, glm::vec3(0.0f, 1.0f, 0.0f)));
-		up = glm::normalize(glm::cross(right, front));
-
-		glm::vec3 desiredVelocity = glm::vec3(0.0f);
-		
+		velocity = glm::vec3(0.0);
 
 		if (glfwGetKey(window->getWindow(), GLFW_KEY_W) == GLFW_PRESS) {
-			desiredVelocity += front ;
+			velocity.y = 1;
 		}
 
 		if (glfwGetKey(window->getWindow(), GLFW_KEY_S) == GLFW_PRESS) {
-			desiredVelocity += -front;
+			velocity.y = -1;
 		}
 
 		if (glfwGetKey(window->getWindow(), GLFW_KEY_D) == GLFW_PRESS) {
-			desiredVelocity += right;
+			velocity.x = 1;
 		}
 
 		if (glfwGetKey(window->getWindow(), GLFW_KEY_A) == GLFW_PRESS) {
-			desiredVelocity += -right;
+			velocity.x = -1;
 		}
 
-		if (glm::length(desiredVelocity) > 0.0f)
-			desiredVelocity = glm::normalize(desiredVelocity) * speed;
 
-		velocity = glm::mix(velocity, desiredVelocity, 0.1f);
+
+		velocity = velocity * speed;
+		
 
 		player->transform.position += velocity;
 		
+		countdown -= 1;
+		if (glfwGetKey(window->getWindow(), GLFW_KEY_X) == GLFW_PRESS && countdown <= 0) {
+			player->shoot();
+			countdown = countdown_max;
+		}
 
 
 
-
-		double xpos, ypos;
+		/*double xpos, ypos;
 		glfwGetCursorPos(window->getWindow(), &xpos, &ypos);
 		glfwSetCursorPos(window->getWindow(), window->width / 2, window->height / 2);
 		float xoffset = sensitivity * float(window->width / 2 - xpos);
-		float yoffset = sensitivity * float(window->height / 2 - ypos);
-
-		player->update_rotation(xoffset, yoffset, 0.0);
+		float yoffset = sensitivity * float(window->height / 2 - ypos);*/
 	}
 };
 

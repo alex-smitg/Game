@@ -29,6 +29,8 @@ public:
 	}
 	
 	void draw() {
+		Actor::draw();
+
 		shader->use();
 		shader->setMat4("model", transform.get_matrix());
 
@@ -57,7 +59,7 @@ public:
 	}
 
 	void update() {
-
+		Actor::update();
 	}
 
 

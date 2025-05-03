@@ -31,6 +31,7 @@
 #include "player_controller.h"
 #include "font.h"
 #include "player.h"
+#include "mesh_instance_spawner.h"
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
@@ -62,9 +63,9 @@ int main() {
         meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
         meshInstance->setShader(assetManager.getShader("standart"));
         meshInstance->setMaterial(assetManager.getMaterial("test"));
-        meshInstance->transform.position.z = random.randfloat() * 100.0f - 50.0f;
-        meshInstance->transform.position.y = random.randfloat() * 100.0f - 50.0f;
-        meshInstance->transform.position.x = random.randfloat() * 100.0f - 50.0f;
+        meshInstance->transform.position.z = random.randfloat() * 80.0f - 40.0f;
+        meshInstance->transform.position.y = random.randfloat() * 80.0f - 40.0f;
+        meshInstance->transform.position.x = random.randfloat() * 80.0f - 40.0f;
         scene.addChild(meshInstance);
     }
 
@@ -74,11 +75,34 @@ int main() {
     
 
     Player player;
+    player.setName("player");
+    scene.addChild(&player);
 
+
+
+    MeshInstanceSpawner bulletSpawner(assetManager.getMesh("bullet.obj"), assetManager.getShader("standart"), assetManager.getMaterial("test"), "bullet");
+
+
+    MeshInstance* meshInstance = new MeshInstance("Arrow_player");
+    meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
+    meshInstance->setShader(assetManager.getShader("standart"));
+    meshInstance->setMaterial(assetManager.getMaterial("test"));
+    scene.addChild(meshInstance);
+
+
+    MeshInstance* terrain = new MeshInstance("terrain");
+    terrain->setMesh(assetManager.getMesh("terrain.obj"));
+    terrain->setShader(assetManager.getShader("standart"));
+    terrain->setMaterial(assetManager.getMaterial("test"));
+    //scene.addChild(terrain);
     
     Font font(assetManager.getShader("font"), assetManager.getTexture("font.png"));
 
-    
+
+    Actor* bullets = new Actor();
+    bullets->setName("bullets");
+    player.addChild(bullets);
+    player.meshInstanceSpawner = &bulletSpawner;
     
     scene.addChild(&camera);
 
@@ -89,6 +113,10 @@ int main() {
 
     const double targetFPS = 60.0;
     const double frameDuration = 1.0 / targetFPS; // 0.01666...
+
+
+    float camera_y_st = 0;
+
 
     double lastTime = glfwGetTime();
 
@@ -107,18 +135,38 @@ int main() {
         if (delta >= frameDuration) {
             window.pollEvents();
 
-            scene.update();
+
+            playerController.processInput(&window);
+           
 
             camera.projection = glm::perspective(camera.fov / 180.0f * 3.14f, camera.aspectRatio, 0.1f, 5500.0f);
-            playerController.processInput(&window);
+            
+
+            camera_y_st += 0.1;
+            player.transform.position.y += 0.1;
+
+            if (player.transform.position.y < camera_y_st) {
+                player.transform.position.y = camera_y_st;
+            }
+
+    
+
+            camera.transform.position = player.transform.position;
+            camera.transform.position.z += 25;
+            camera.transform.position.y = camera_y_st;
+            camera.transform.rotation.x = 0.4;
+
+           /* scene.getChild("terrain")->transform = camera.transform;
+            scene.getChild("terrain")->transform.position.y += 6;
+            scene.getChild("terrain")->transform.position.z -=  40;*/
+
+            scene.getChild("Arrow1")->transform = player.transform;
+
+            Actor* actor = scene.getChild("Arrow_player");
+            actor->transform = player.transform;
 
 
-           
-            glm::mat4 view = camera.view;
-            view = glm::lookAt(player.transform.position, player.transform.position + playerController.front, playerController.up);
-            camera.view = view;
-
-
+            scene.update();
 
             Shader* standart = assetManager.getShader("standart");
             standart->use();
@@ -147,8 +195,7 @@ int main() {
 
             assetManager.getShader("font")->use();
 
-            font.draw(std::to_string(player.yaw) + "\n" +
-                std::to_string(player.pitch) + "\n" +
+            font.draw(
                 std::to_string(player.transform.position.x) + "\n" +
                 std::to_string(player.transform.position.y) + "\n" +
                 std::to_string(player.transform.position.z) + "\n"
