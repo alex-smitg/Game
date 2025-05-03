@@ -8,7 +8,7 @@
 
 #include "actor.h"
 
-class Camera : Actor {
+class Camera : public Actor {
 public:
 	glm::mat4 view;
 	glm::mat4 projection;
@@ -17,6 +17,9 @@ public:
 	float aspectRatio = 1.0f;
 	float nearPlane = 0.01f;
 	float farPlane = 5000.0f;
+
+	float horizontalAngle = 3.14f;
+	float verticalAngle = 0.0f;
 
 	Camera() {
 		view = glm::mat4(1.0);

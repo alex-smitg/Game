@@ -40,8 +40,12 @@ public:
 			shader->setInt("emit", material->emit);
 
 			if (material->diffuse_texture != nullptr) {
+				shader->setBool("use_diffuse", true);
 				glActiveTexture(GL_TEXTURE0);
 				glBindTexture(GL_TEXTURE_2D, material->diffuse_texture->id);
+			}
+			else {
+				shader->setBool("use_diffuse", false);
 			}
 		}
 		if (mesh != nullptr) {

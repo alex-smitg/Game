@@ -18,7 +18,7 @@ public:
 		this->name = name;
 	}
 
-	void addChildren(Actor* actor) {
+	void addChild(Actor* actor) {
 		childrens.push_back(actor);
 	}
 

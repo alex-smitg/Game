@@ -25,11 +25,11 @@ public:
 	}
 
 
-	void addChildren(Actor* actor) {
+	void addChild(Actor* actor) {
 		childrens[actor->name] = actor;
 	}
 
-	Actor* getChildren(std::string name) {
+	Actor* getChild(std::string name) {
 		return childrens[name];
 	}
 

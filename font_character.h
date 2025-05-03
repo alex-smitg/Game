@@ -41,7 +41,7 @@ public:
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
 
-		shader->Use();
+		shader->use();
 		shader->setVec3("color", color);
 		shader->setVec2("char_pos", char_pos);
 		shader->setVec2("position", position);

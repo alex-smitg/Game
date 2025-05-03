@@ -12,6 +12,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 
+
+add_subdirectory(tools)
+
+
 set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/ASSETS")
 add_definitions(-DASSETS_PATH="${ASSETS_PATH}")
 
@@ -21,11 +25,11 @@ add_executable (Game "Game.cpp" )
 set(SCRIPT ${CMAKE_SOURCE_DIR}/packer.py)
 
 add_custom_target(
-    shaderPack
+    pack
     COMMAND ${SCRIPT}
 )
 
-add_dependencies(Game shaderPack)
+add_dependencies(Game pack)
 
 target_include_directories(Game PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
@@ -36,8 +40,6 @@ message(STATUS "Found libraries: ${LIBRARIES}")
 
 
 target_link_libraries(Game PRIVATE ${LIBRARIES} opengl32)
-
-
 
 
 

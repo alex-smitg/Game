@@ -9,7 +9,7 @@
 class Texture {
 public:
 	GLuint id;
-	std::string path;
+
 
 
 	//~Texture() {

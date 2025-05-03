@@ -27,28 +27,49 @@
 #include "scene.h"
 #include "mesh_instance.h"
 #include "camera.h"
+#include "random.h"
+#include "camera_controller.h"
+#include "font.h"
+
+void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
+void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
+void framebuffer_size_callback(GLFWwindow* _window, int width, int height);
+
+Window window(600, 600, "Game");
+Camera camera;
 
 int main() {
 
-	Window window(600, 600, "Game");
+	
+    glfwSetFramebufferSizeCallback(window.getWindow(), framebuffer_size_callback);
+    glfwSetKeyCallback(window.getWindow(), key_callback);
+    glfwSetMouseButtonCallback(window.getWindow(), mouse_button_callback);
 
 	AssetManager assetManager;
+
+    Random random;
 	
+    //Font font = Font(assetManager.getShader("font"), fontTexture);
 
     assetManager.createMaterial("test");
 
     MeshInstance* meshInstance = new MeshInstance("Arrow");
-    meshInstance->setMesh(assetManager.getMesh("arrow.obj"));
+    meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
     meshInstance->setShader(assetManager.getShader("standart"));
     meshInstance->setMaterial(assetManager.getMaterial("test"));
     meshInstance->transform.position.z = 5;
 
+    assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
+
+
+   
+
     Scene scene;
-    scene.addChildren(meshInstance);
+    scene.addChild(meshInstance);
 
-    Camera camera;
-
-
+   
+    CameraController cameraController;
+    cameraController.camera = &camera;
 
 
 
@@ -65,7 +86,7 @@ int main() {
         double currentTime = glfwGetTime();
         double delta = currentTime - lastTime;
 
-        int fov = 79;
+        int fov = 70;
         float aspectRatio = 1.0;
 
 
@@ -74,13 +95,17 @@ int main() {
 
             scene.update();
 
+            camera.projection = glm::perspective(camera.fov / 180.0f * 3.14f, camera.aspectRatio, 0.1f, 5500.0f);
+            cameraController.processKeyboard(window.getWindow(), delta);
+            cameraController.processMouse(&window);
+
 
             Shader* standart = assetManager.getShader("standart");
             standart->use();
             standart->setMat4("view", camera.view);
             standart->setMat4("projection", camera.projection);
 
-            Actor* actor = scene.getChildren("Arrow");
+            Actor* actor = scene.getChild("Arrow");
             actor->transform.position.z = sin(glfwGetTime()) * 10.0;
 
             scene.draw();
@@ -91,6 +116,39 @@ int main() {
 
 
 	return 0;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+
+}
+
+void framebuffer_size_callback(GLFWwindow* _window, int width, int height)
+{
+	glViewport(0, 0, width, height);
+
+	//glViewport(0, 0, width, height);
+	window.width = width;
+	window.height = height;
+	camera.aspectRatio = (float)width / (float)height;
+	if ((int)height == 0) {
+        camera.aspectRatio = 1;
+	}
+	//glBindTexture(GL_TEXTURE_2D, pickingTexture);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, window_width, window_height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+}
+
+void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == 1) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == 0) {
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
+
 }
 
 
