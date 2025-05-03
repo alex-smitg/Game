@@ -28,12 +28,13 @@
 #include "mesh_instance.h"
 #include "camera.h"
 #include "random.h"
-#include "camera_controller.h"
+#include "player_controller.h"
 #include "font.h"
 #include "player.h"
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
+
 void framebuffer_size_callback(GLFWwindow* _window, int width, int height);
 
 Window window(600, 600, "Game");
@@ -53,12 +54,20 @@ int main() {
     //Font font = Font(assetManager.getShader("font"), fontTexture);
 
     assetManager.createMaterial("test");
+    Scene scene;
 
-    MeshInstance* meshInstance = new MeshInstance("Arrow");
-    meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
-    meshInstance->setShader(assetManager.getShader("standart"));
-    meshInstance->setMaterial(assetManager.getMaterial("test"));
-    meshInstance->transform.position.z = 5;
+
+    for (int i = 0; i < 30; i++) {
+        MeshInstance* meshInstance = new MeshInstance("Arrow" + std::to_string(i));
+        meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
+        meshInstance->setShader(assetManager.getShader("standart"));
+        meshInstance->setMaterial(assetManager.getMaterial("test"));
+        meshInstance->transform.position.z = random.randfloat() * 100.0f - 50.0f;
+        meshInstance->transform.position.y = random.randfloat() * 100.0f - 50.0f;
+        meshInstance->transform.position.x = random.randfloat() * 100.0f - 50.0f;
+        scene.addChild(meshInstance);
+    }
+
 
     assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
 
@@ -69,12 +78,12 @@ int main() {
     
     Font font(assetManager.getShader("font"), assetManager.getTexture("font.png"));
 
-    Scene scene;
-    scene.addChild(meshInstance);
+    
+    
+    scene.addChild(&camera);
 
-   
-    CameraController cameraController;
-    cameraController.camera = &camera;
+    PlayerController playerController;
+    playerController.player = &player;
 
 
 
@@ -85,7 +94,7 @@ int main() {
 
     while (!window.shouldClose()) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //bg color
+        glClearColor(0.0f, 0.0f, 0.1f, 1.0f); //bg color
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         double currentTime = glfwGetTime();
@@ -101,10 +110,14 @@ int main() {
             scene.update();
 
             camera.projection = glm::perspective(camera.fov / 180.0f * 3.14f, camera.aspectRatio, 0.1f, 5500.0f);
-            cameraController.processKeyboard(window.getWindow(), delta);
-            cameraController.processMouse(&window);
+            playerController.processInput(&window);
 
-            camera.transform = player.transform;
+
+           
+            glm::mat4 view = camera.view;
+            view = glm::lookAt(player.transform.position, player.transform.position + playerController.front, playerController.up);
+            camera.view = view;
+
 
 
             Shader* standart = assetManager.getShader("standart");
@@ -112,8 +125,7 @@ int main() {
             standart->setMat4("view", camera.view);
             standart->setMat4("projection", camera.projection);
 
-            Actor* actor = scene.getChild("Arrow");
-            actor->transform.position.z = sin(glfwGetTime()) * 10.0;
+
 
             scene.draw();
 
@@ -135,11 +147,18 @@ int main() {
 
             assetManager.getShader("font")->use();
 
-            font.draw("hello hpw are you doing, im fine\n yes", glm::vec2(0.0, 0.0), &proj);
+            font.draw(std::to_string(player.yaw) + "\n" +
+                std::to_string(player.pitch) + "\n" +
+                std::to_string(player.transform.position.x) + "\n" +
+                std::to_string(player.transform.position.y) + "\n" +
+                std::to_string(player.transform.position.z) + "\n"
+                
+                , glm::vec2(0.0, logicalHeight - 5.0), &proj);
 
 
             font.color = glm::vec3(1.0, 0.0, 0.0);
-            font.draw(std::to_string(glfwGetTime()), glm::vec2(glfwGetTime(), glfwGetTime()), &proj);
+            font.draw(std::to_string(glfwGetTime())
+                , glm::vec2(glfwGetTime(), glfwGetTime()), &proj);
             font.color = glm::vec3(1.0, 0.0, 1.0);
 
             glEnable(GL_CULL_FACE);

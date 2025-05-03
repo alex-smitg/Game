@@ -24,6 +24,13 @@ public:
 	Camera() {
 		view = glm::mat4(1.0);
 		projection = glm::perspective(fov / 180.0f * 3.14f, aspectRatio, 0.1f, 5500.0f);
+
+		
+	}
+
+
+	void update() {
+		Actor::update();
 	}
 };
 
