@@ -30,7 +30,7 @@ add_custom_target(
 
 add_dependencies(Game pack)
 
-target_include_directories(Game PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(Game PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/include/AL)
 
 link_directories(${CMAKE_SOURCE_DIR}/lib/Debug)
 
@@ -38,7 +38,7 @@ file(GLOB_RECURSE LIBRARIES "${CMAKE_SOURCE_DIR}/lib/Debug/*.lib")
 message(STATUS "Found libraries: ${LIBRARIES}")
 
 
-target_link_libraries(Game PRIVATE ${LIBRARIES} opengl32)
+target_link_libraries(Game PRIVATE ${LIBRARIES} opengl32 ${CMAKE_SOURCE_DIR}/lib/Debug/OpenAL32.lib)
 
 
 

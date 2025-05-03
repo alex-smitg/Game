@@ -20,6 +20,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
+#include <AL/al.h>
+#include <AL/alc.h>
+
+
 #include "Game.h"
 
 #include "asset_manager.h"
@@ -33,6 +38,7 @@
 #include "player.h"
 #include "mesh_instance_spawner.h"
 #include "enemy.h"
+#include "sound.h"
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
@@ -43,6 +49,32 @@ Window window(600, 600, "Game");
 Camera camera;
 
 int main() {
+    ALCdevice* device = alcOpenDevice(nullptr);
+    if (!device) { std::cout << "No audio device\n"; return -1; }
+
+    ALCcontext* context = alcCreateContext(device, nullptr);
+    alcMakeContextCurrent(context);
+
+    ALuint buffer;
+    if (!loadWavFile("C:\\Users\\AlexSmith\\Desktop\\k\\Game\\ASSETS\\sounds\\test.wav", buffer)) {
+        std::cout << "Failed to load WAV\n";
+        return -1;
+    }
+
+    ALuint source;
+    alGenSources(1, &source);
+    alSourcei(source, AL_BUFFER, buffer);
+    alSourcePlay(source);
+
+    std::cout << "Playing sound...\n";
+    alGetError(); 
+
+    ALint state;
+
+    
+
+
+
 
 	
     glfwSetFramebufferSizeCallback(window.getWindow(), framebuffer_size_callback);

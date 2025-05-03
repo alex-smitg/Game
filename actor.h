@@ -56,14 +56,8 @@ public:
 
 	virtual void draw() {
 		for (Actor* actor : childrens) {
-			if (actor->is_destroyed) {
-				delete actor;
-			}
-			else {
-				actor->draw();
 
-			}
-			
+			actor->draw();
 		}
 	}
 
