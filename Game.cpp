@@ -1,6 +1,11 @@
 #ifndef GAME_MAIN
 #define GAME_MAIN
 
+
+#define AL_LIBTYPE_STATIC
+#include <AL/al.h>
+#include <AL/alc.h>
+
 #include <Windows.h>
 #include <iostream>
 #include <string>
@@ -20,8 +25,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-#include <AL/al.h>
-#include <AL/alc.h>
 
 
 #include "Game.h"
@@ -625,7 +628,7 @@ int main() {
     std::cout << msg << "\n";
     std::cout << "Счёт: " << score << std::endl;
 
-    system("pause");
+    getchar();
 
 	return 0;
 }

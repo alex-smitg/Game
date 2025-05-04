@@ -42,7 +42,7 @@ file(GLOB_RECURSE LIBRARIES "${CMAKE_SOURCE_DIR}/lib/Debug/*.lib")
 message(STATUS "Found libraries: ${LIBRARIES}")
 
 
-target_link_libraries(Game PRIVATE ${LIBRARIES} opengl32 ${CMAKE_SOURCE_DIR}/lib/Debug/OpenAL32.lib)
+target_link_libraries(Game PRIVATE ${LIBRARIES} opengl32 ${CMAKE_SOURCE_DIR}/lib/Debug/OpenAL32.lib winmm)
 
 
 
