@@ -104,40 +104,4 @@ with open(dir_path + "\models.h", "w") as file:
     file.write("};")
 print("Models OK")
 
-
-print("Textures")
-with open("textures.h", "w") as file:
-    file.write("#pragma once\n")
-    file.write("#include <map>\n")
-    file.write("#include <string>\n")
-    file.write("#include <vector>\n")
-    file.write("struct Tex {std::vector<unsigned char> data; int width; int height; int channels; \nTex(std::vector<unsigned char> data, int width, int height, int channels)\n: data(data), width(width), height(height), channels(channels) {};};\n")
-    file.write("std::map<std::string, Tex> textures = {\n")
-
-
-    with os.scandir(dir_path + "\\ASSETS\\textures") as it:
-        for entry in it:
-            if entry.is_file():
-                image = Image.open(entry.path)
-                image = image.convert('RGBA')
-                image_data = list(image.getdata())
-                hex_data = ', '.join(f'0x{byte:02x}' for pixel in image_data for byte in pixel)
-                name = entry.name
-
-                file.write("{")
-
-                struct = "Tex(" + "{" + hex_data + "}" + "," + str(image.width) + "," + str(image.height) + "," + str(len(image.getbands())) + ")"
-
-                file.write(f'"{name}", {struct}')
-
-                file.write("},")
-
-                
-
-    file.write("};")
-print("Textures OK")
-
-
-
-
 print("Assets OK")

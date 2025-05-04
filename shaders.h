@@ -76,12 +76,12 @@ uniform sampler2D oText;
 vec3 calculateDiffuse(vec3 lightColor, vec2 uv, vec3 norm) {
     vec3 diffuse;
 
-
+	float diff = max(dot(norm, -vec3(0.9, 0.5, -0.9)), 0.0);
     
     if (use_diffuse) {
-        diffuse = texture(oText, vec2(uv.x, 1.0 - uv.y)).rgb * lightColor * diffuse_color;
+        diffuse = diff * texture(oText, vec2(uv.x, 1.0 - uv.y)).rgb * lightColor * diffuse_color;
     } else {
-        diffuse = lightColor * diffuse_color;
+        diffuse = diff * lightColor * diffuse_color;
     }
     
     return diffuse;
@@ -118,7 +118,6 @@ void main()
     }
     vec2 new_TexCoord = uv_scale * TexCoord;
 
-    vec3 viewDir = normalize(viewPos - FragPos);
 	vec3 norm = Normal;
 	
     vec3 result = vec3(0.0, 0.0, 0.0);
@@ -129,8 +128,9 @@ void main()
     }
 
 
-
+	vec3 viewDir = normalize(viewPos - FragPos);
     result = ambient + result + calculateDiffuse(lightColor, new_TexCoord, norm);
+
 
     if (emit) {
         result = vec3(diffuse_color);

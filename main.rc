@@ -1,2 +1,18 @@
-#define IDR_WAV1 101
+#define IDR_WAV1 1
 IDR_WAV1 WAV "assets\\sounds\\game.wav"
+
+#define R_TEX1 2
+R_TEX1 RCDATA "assets\\textures\\terrain.png"
+
+#define R_TEX2 3
+R_TEX2 RCDATA "assets\\textures\\test.png"
+
+#define R_TEX3 4
+R_TEX3 RCDATA "assets\\textures\\font.png"
+
+#define R_TEX4 5
+R_TEX4 RCDATA "assets\\textures\\redhoodhelicopter.png"
+
+
+#define R_TEX5 6
+R_TEX5 RCDATA "assets\\textures\\bullet.png"

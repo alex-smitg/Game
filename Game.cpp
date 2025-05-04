@@ -12,9 +12,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STBIW_WINDOWS_UTF8
-#include <stb_image.h>
+
 
 
 #include <glm/glm.hpp>
@@ -50,7 +48,7 @@ void framebuffer_size_callback(GLFWwindow* _window, int width, int height);
 Window window(600, 600, "Game");
 Camera camera;
 
-#define IDR_WAV1 101
+#define IDR_WAV1 1
 
 
 int main() {
@@ -125,7 +123,13 @@ int main() {
 
     assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
 
+    assetManager.createMaterial("player");
 
+    assetManager.getMaterial("player")->diffuse_texture = assetManager.getTexture("redhoodhelicopter.png");
+
+    assetManager.createMaterial("bullet");
+
+    assetManager.getMaterial("bullet")->diffuse_texture = assetManager.getTexture("bullet.png");
 
 
     std::vector<Enemy*> enemies;
@@ -137,7 +141,6 @@ int main() {
     scene.addChild(&player);
     player.bullets = &bullets;
 
-    
     MeshInstance* beerInstance = new MeshInstance("Beer");
     beerInstance->setMesh(assetManager.getMesh("beer.obj"));
     beerInstance->setShader(assetManager.getShader("standart"));
@@ -147,7 +150,7 @@ int main() {
     MeshInstance* bulletInstance = new MeshInstance("Bullet");
     bulletInstance->setMesh(assetManager.getMesh("bullet.obj"));
     bulletInstance->setShader(assetManager.getShader("standart"));
-    bulletInstance->setMaterial(assetManager.getMaterial("test"));
+    bulletInstance->setMaterial(assetManager.getMaterial("bullet"));
 
 
 
@@ -172,7 +175,7 @@ int main() {
     MeshInstance* playerInstance = new MeshInstance("Arrow_player");
     playerInstance->setMesh(assetManager.getMesh("player.obj"));
     playerInstance->setShader(assetManager.getShader("standart"));
-    playerInstance->setMaterial(assetManager.getMaterial("test"));
+    playerInstance->setMaterial(assetManager.getMaterial("player"));
     scene.addChild(playerInstance);
 
 
@@ -222,7 +225,7 @@ int main() {
 
     while (!window.shouldClose()) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClearColor(0.0f, 0.0f, 0.1f, 1.0f); //bg color
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); //bg color
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         double currentTime = glfwGetTime();
@@ -259,6 +262,17 @@ int main() {
 
             enemy_spawn_countdown -= 1;
 
+            terrain->transform.position.z = -25;
+            terrain->transform.scale = glm::vec3(1.0, 1.0, 1.0) * 5.0f;
+
+            for (int i = 0; i < 16; i++) {
+                
+                assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("terrain.png");
+                terrain->transform.position.y = camera_y_st / 2.0 + 100.0 * i; 
+                terrain->draw();
+                assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
+            }
+
             
 
             if (enemy_spawn_countdown <= 0) {
@@ -281,7 +295,7 @@ int main() {
                 enemy->transform = player.transform;
                 enemy->transform.position.z = player.transform.position.z;
                 enemy->transform.position.x = random.randfloat() * 40.0 - 20;
-                enemy->transform.position.y = camera_y_st + 40.0;
+                enemy->transform.position.y = camera_y_st + 50.0;
 
                 enemies.push_back(enemy);
                 

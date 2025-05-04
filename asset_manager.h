@@ -3,6 +3,10 @@
 
 #include <map>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+
 #include "mesh.h"
 #include "material.h"
 #include "shader.h"
@@ -10,10 +14,52 @@
 
 #include "models.h"
 #include "shaders.h"
-#include "textures.h"
+
+
+#define R_TEX1 2
+#define R_TEX2 3
+#define R_TEX3 4
+#define R_TEX4 5
+#define R_TEX5 6
 
 class AssetManager {
 public:
+
+
+	Texture* createTexture(int texture) {
+		unsigned char* image_data = nullptr;
+		int width, height, channels;
+
+		HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(texture), RT_RCDATA);
+		HGLOBAL hData = LoadResource(NULL, hRes);
+		DWORD image_size = SizeofResource(NULL, hRes);
+		void* pRawData = LockResource(hData);
+
+
+		image_data = stbi_load_from_memory(
+			reinterpret_cast<stbi_uc*>(pRawData),
+			image_size,
+			&width, &height, &channels,
+			STBI_rgb_alpha
+		);
+		Texture* tex = new Texture();
+
+		glGenTextures(1, &tex->id);
+		glBindTexture(GL_TEXTURE_2D, tex->id);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+
+		stbi_image_free(image_data);
+
+		return tex;
+	}
 	
 
 	AssetManager() {
@@ -22,29 +68,12 @@ public:
 			meshes[name] = mesh;
 		}
 
-		for (auto const& [name, data] : textures) {
-			Texture* texture = new Texture();
-
-			int width = data.width;
-			int height = data.height;
-			int channels = data.channels;
-
-			glGenTextures(1, &texture->id);
-			glBindTexture(GL_TEXTURE_2D, texture->id);
-
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data.data());
-
-
-			glGenerateMipmap(GL_TEXTURE_2D);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			
-			_textures[name] = texture;
-		}
-
-
+		
+		_textures["terrain.png"] = createTexture(R_TEX1);
+		_textures["test.png"] = createTexture(R_TEX2);
+		_textures["font.png"] = createTexture(R_TEX3);
+		_textures["redhoodhelicopter.png"] = createTexture(R_TEX4);
+		_textures["bullet.png"] = createTexture(R_TEX5);
 
 		Shader* standart = new Shader(shaders["standart.vertex"], shaders["standart.fragment"]);
 		standart->use();

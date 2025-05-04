@@ -21,7 +21,6 @@ public:
 		glDeleteBuffers(1, &VBO);
 		glDeleteVertexArrays(1, &VAO);
 	}
-
 	void draw() {
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, vertices.size() / VALUES_PER_VERTEX);
