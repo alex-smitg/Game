@@ -5,7 +5,7 @@ IDR_WAV1 WAV "assets\\sounds\\game.wav"
 R_TEX1 RCDATA "assets\\textures\\terrain.png"
 
 #define R_TEX2 3
-R_TEX2 RCDATA "assets\\textures\\test.png"
+R_TEX2 RCDATA "assets\\textures\\wolf.png"
 
 #define R_TEX3 4
 R_TEX3 RCDATA "assets\\textures\\font.png"
@@ -16,3 +16,11 @@ R_TEX4 RCDATA "assets\\textures\\redhoodhelicopter.png"
 
 #define R_TEX5 6
 R_TEX5 RCDATA "assets\\textures\\bullet.png"
+
+
+#define R_TEX6 7
+R_TEX6 RCDATA "assets\\textures\\kimchi.png"
+
+
+#define R_TEX7 8
+R_TEX7 RCDATA "assets\\textures\\beer.png"

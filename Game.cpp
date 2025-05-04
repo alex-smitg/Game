@@ -121,7 +121,7 @@ int main() {
     assetManager.createMaterial("test");
     Scene scene;
 
-    assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
+    assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("wolf.png");
 
     assetManager.createMaterial("player");
 
@@ -131,6 +131,13 @@ int main() {
 
     assetManager.getMaterial("bullet")->diffuse_texture = assetManager.getTexture("bullet.png");
 
+    assetManager.createMaterial("kimchi");
+
+    assetManager.getMaterial("kimchi")->diffuse_texture = assetManager.getTexture("kimchi.png");
+
+    assetManager.createMaterial("beer");
+
+    assetManager.getMaterial("beer")->diffuse_texture = assetManager.getTexture("beer.png");
 
     std::vector<Enemy*> enemies;
     std::vector<Bullet*> bullets;
@@ -144,7 +151,7 @@ int main() {
     MeshInstance* beerInstance = new MeshInstance("Beer");
     beerInstance->setMesh(assetManager.getMesh("beer.obj"));
     beerInstance->setShader(assetManager.getShader("standart"));
-    beerInstance->setMaterial(assetManager.getMaterial("test"));
+    beerInstance->setMaterial(assetManager.getMaterial("beer"));
 
 
     MeshInstance* bulletInstance = new MeshInstance("Bullet");
@@ -155,7 +162,7 @@ int main() {
 
 
     MeshInstance* enemyInstance = new MeshInstance("Enemy");
-    enemyInstance->setMesh(assetManager.getMesh("ship01.obj"));
+    enemyInstance->setMesh(assetManager.getMesh("wolf.obj"));
     enemyInstance->setShader(assetManager.getShader("standart"));
     enemyInstance->setMaterial(assetManager.getMaterial("test"));
 
@@ -163,14 +170,14 @@ int main() {
     MeshInstance* kimchiInstance = new MeshInstance("Kimchi");
     kimchiInstance->setMesh(assetManager.getMesh("kimchi.obj"));
     kimchiInstance->setShader(assetManager.getShader("standart"));
-    kimchiInstance->setMaterial(assetManager.getMaterial("test"));
+    kimchiInstance->setMaterial(assetManager.getMaterial("kimchi"));
     
 
     MeshInstance* meshInstance = new MeshInstance("???");
     meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
     meshInstance->setShader(assetManager.getShader("standart"));
     meshInstance->setMaterial(assetManager.getMaterial("test"));
-    scene.addChild(meshInstance);
+    //scene.addChild(meshInstance);
 
     MeshInstance* playerInstance = new MeshInstance("Arrow_player");
     playerInstance->setMesh(assetManager.getMesh("player.obj"));
@@ -217,6 +224,8 @@ int main() {
 
     std::string last_killed = "";
 
+    std::string msg = "";
+
     float hard = 1.0;
 
     float die_countdown = 20.0f;
@@ -239,8 +248,18 @@ int main() {
         if (delta >= frameDuration) {
             window.pollEvents();
 
-            if (lives < 0 || die_countdown <= 0) {
+            if (lives < 0) {
+                msg = "Красношапочный вертолёт был уничтожен волкомобилями.";
                 break;
+            }
+
+            if (die_countdown < 0) {
+                msg = "Ярость ослабла.";
+                break;
+            }
+
+            if (hard > 3.0) {
+                msg = "Сладкая месть и деталей не счесть. ";
             }
 
             die_countdown -= 0.06;
@@ -270,7 +289,7 @@ int main() {
                 assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("terrain.png");
                 terrain->transform.position.y = camera_y_st / 2.0 + 100.0 * i; 
                 terrain->draw();
-                assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("test.png");
+                assetManager.getMaterial("test")->diffuse_texture = assetManager.getTexture("wolf.png");
             }
 
             
@@ -290,7 +309,7 @@ int main() {
 
 
                 enemy->direction = dir;
-                enemy->health = hard * 2;
+                enemy->health = hard * 1.5;
                 enemy->countdown_max /= hard * 1;
                 enemy->transform = player.transform;
                 enemy->transform.position.z = player.transform.position.z;
@@ -509,7 +528,7 @@ int main() {
 
 
                     if (r2 > 0.8) {
-                        if (r > 0 && r < 0.9) {
+                        if (r > 0 && r < 0.6) {
                             Collectable* col = new Collectable();
                             col->type = Type::BEER;
                             col->transform = enemy->transform;
@@ -517,7 +536,7 @@ int main() {
                             playerController.countdown_max -= 0.5;
                         }
 
-                        if (r > 0.9) {
+                        if (r > 0.6) {
                             
                             Collectable* col = new Collectable();
                             col->type = Type::KIMCHI;
@@ -603,8 +622,8 @@ int main() {
     alcDestroyContext(context);
     alcCloseDevice(device);
 
-    std::cout << "Конец" << "\n";
-    std::cout << score << std::endl;
+    std::cout << msg << "\n";
+    std::cout << "Счёт: " << score << std::endl;
 
     system("pause");
 

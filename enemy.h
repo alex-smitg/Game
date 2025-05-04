@@ -37,7 +37,7 @@ public:
 
 	void update() {
 		Actor::update();
-		time += 0.04f;
+		time += 0.08f;
 
 		livetime += 1;
 
@@ -51,17 +51,6 @@ public:
 			break;
 
 
-		case Movement::CIRCLE:
-			transform.position += direction * speed;
-			transform.position.x += sin(time) / 5.0;
-			transform.position.y -= cos(time) / 5.0;
-
-			break;
-
-
-		case Movement::STRAIGHT:
-			transform.position += direction * speed;
-			break;
 		}
 	}
 

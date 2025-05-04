@@ -21,6 +21,8 @@
 #define R_TEX3 4
 #define R_TEX4 5
 #define R_TEX5 6
+#define R_TEX6 7
+#define R_TEX7 8
 
 class AssetManager {
 public:
@@ -68,12 +70,13 @@ public:
 			meshes[name] = mesh;
 		}
 
-		
 		_textures["terrain.png"] = createTexture(R_TEX1);
-		_textures["test.png"] = createTexture(R_TEX2);
+		_textures["wolf.png"] = createTexture(R_TEX2);
 		_textures["font.png"] = createTexture(R_TEX3);
 		_textures["redhoodhelicopter.png"] = createTexture(R_TEX4);
 		_textures["bullet.png"] = createTexture(R_TEX5);
+		_textures["kimchi.png"] = createTexture(R_TEX6);
+		_textures["beer.png"] = createTexture(R_TEX7);
 
 		Shader* standart = new Shader(shaders["standart.vertex"], shaders["standart.fragment"]);
 		standart->use();
