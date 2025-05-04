@@ -1,0 +1,2 @@
+#define IDR_WAV1 101
+IDR_WAV1 WAV "assets\\sounds\\game.wav"

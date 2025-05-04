@@ -38,10 +38,8 @@
 #include "font.h"
 #include "player.h"
 #include "enemy.h"
-#include "sound.h"
 #include "collectable.h"
 
-#include "sounds.h"
 
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
@@ -52,36 +50,59 @@ void framebuffer_size_callback(GLFWwindow* _window, int width, int height);
 Window window(600, 600, "Game");
 Camera camera;
 
-int main() {
-    ALCdevice* device = alcOpenDevice(nullptr);
-    if (!device) { std::cout << "No audio device\n"; return -1; }
+#define IDR_WAV1 101
 
-    ALCcontext* context = alcCreateContext(device, nullptr);
+
+int main() {
+    ALCdevice* device = alcOpenDevice(NULL);
+    if (!device) {
+        std::cerr << "openal error" << std::endl;
+        return -1;
+    }
+
+    ALCcontext* context = alcCreateContext(device, NULL);
     alcMakeContextCurrent(context);
+
+    HRSRC hRes = FindResource(NULL, MAKEINTRESOURCE(IDR_WAV1), "WAV");
+    HGLOBAL hData = LoadResource(NULL, hRes);
+    DWORD dwSize = SizeofResource(NULL, hRes);
+    BYTE* pData = (BYTE*)LockResource(hData);
+
+    short channels = *(short*)(pData + 22);
+    int sampleRate = *(int*)(pData + 24);
+    short bitsPerSample = *(short*)(pData + 34);
+
+    ALenum format;
+    if (channels == 1 && bitsPerSample == 8) format = AL_FORMAT_MONO8;
+    else if (channels == 1 && bitsPerSample == 16) format = AL_FORMAT_MONO16;
+    else if (channels == 2 && bitsPerSample == 8) format = AL_FORMAT_STEREO8;
+    else if (channels == 2 && bitsPerSample == 16) format = AL_FORMAT_STEREO16;
+
+    BYTE* audioData = nullptr;
+    DWORD audioSize = 0;
+    for (DWORD i = 12; i < dwSize - 8; ) {
+        char chunkID[5] = { 0 };
+        memcpy(chunkID, pData + i, 4);
+        DWORD chunkSize = *(DWORD*)(pData + i + 4);
+
+        if (memcmp(chunkID, "data", 4) == 0) {
+            audioData = pData + i + 8;
+            audioSize = chunkSize;
+            break;
+        }
+        i += 8 + chunkSize;
+    }
 
 
     ALuint buffer;
     alGenBuffers(1, &buffer);
-
-    ALenum format = AL_FORMAT_MONO8;
-
-    //alBufferData(buffer, format, sounds["test.wav"].data(), sounds["test.wav"].size(), 16000);
-
-
-    if (!loadWavFile("C:\\Users\\AlexSmith\\Desktop\\k\\Game\\ASSETS\\sounds\\test.wav", buffer)) {
-        std::cout << "Failed to load WAV\n";
-        return -1;
-    }
+    alBufferData(buffer, format, audioData, audioSize, sampleRate);
 
     ALuint source;
     alGenSources(1, &source);
     alSourcei(source, AL_BUFFER, buffer);
-    //alSourcei(source, AL_LOOPING, AL_TRUE);
+    alSourcei(source, AL_LOOPING, AL_TRUE);
     alSourcePlay(source);
-
-    alGetError(); 
-
-    ALint state;
 
     
 

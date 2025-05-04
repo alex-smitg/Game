@@ -138,44 +138,6 @@ with open("textures.h", "w") as file:
 print("Textures OK")
 
 
-print("Sounds")
-with open("sounds.h", "w") as file:
-    file.write("#pragma once\n")
-    file.write("#include <map>\n")
-    file.write("#include <string>\n")
-    file.write("#include <vector>\n")
-    file.write("std::map<std::string, std::vector<unsigned char>> sounds = {\n")
 
-    with os.scandir(dir_path + "\ASSETS\sounds") as it:
-        for entry in it:
-            if entry.is_file():
-                with wave.open(entry.path, 'rb') as wav:
-                    num_channels = wav.getnchannels()
-                    sample_width = wav.getsampwidth()
-                    sample_rate = wav.getframerate()
-                    num_frames = wav.getnframes()
-                    data = wav.readframes(num_frames)
-
-                    file.write("{")
-                    file.write(f'"{entry.name}"')
-                    file.write(", ")
-                    file.write("{")
-
-                    
-                    for i, byte in enumerate(data):
-                        if i % 12 == 0:
-                            file.write('    ')
-                        file.write(f'0x{byte:02X}, ')
-                        if i % 12 == 11:
-                            file.write('\n')
-                    if len(data) % 12 != 0:
-                        file.write('\n')
-
-
-                    file.write("}},")
-                    
-        file.write("};")
-
-print("Sounds OK")
 
 print("Assets OK")

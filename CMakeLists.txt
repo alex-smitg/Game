@@ -18,8 +18,12 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
 set(ASSETS_PATH "${CMAKE_SOURCE_DIR}/ASSETS")
 add_definitions(-DASSETS_PATH="${ASSETS_PATH}")
 
-add_executable (Game "Game.cpp" )
+add_executable (Game "Game.cpp" main.rc )
 
+if(MSVC)
+    set(CMAKE_RC_COMPILER "RC")
+    target_sources(Game PRIVATE main.rc)
+endif()
 
 set(SCRIPT ${CMAKE_SOURCE_DIR}/packer.py)
 
