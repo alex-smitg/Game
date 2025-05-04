@@ -41,6 +41,8 @@
 #include "sound.h"
 #include "collectable.h"
 
+#include "sounds.h"
+
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
@@ -57,7 +59,15 @@ int main() {
     ALCcontext* context = alcCreateContext(device, nullptr);
     alcMakeContextCurrent(context);
 
+
     ALuint buffer;
+    alGenBuffers(1, &buffer);
+
+    ALenum format = AL_FORMAT_MONO8;
+
+    //alBufferData(buffer, format, sounds["test.wav"].data(), sounds["test.wav"].size(), 16000);
+
+
     if (!loadWavFile("C:\\Users\\AlexSmith\\Desktop\\k\\Game\\ASSETS\\sounds\\test.wav", buffer)) {
         std::cout << "Failed to load WAV\n";
         return -1;
@@ -66,6 +76,7 @@ int main() {
     ALuint source;
     alGenSources(1, &source);
     alSourcei(source, AL_BUFFER, buffer);
+    //alSourcei(source, AL_LOOPING, AL_TRUE);
     alSourcePlay(source);
 
     alGetError(); 
