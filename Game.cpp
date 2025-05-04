@@ -39,6 +39,8 @@
 #include "player.h"
 #include "enemy.h"
 #include "sound.h"
+#include "collectable.h"
+
 
 void key_callback(GLFWwindow* _window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow* _window, int button, int action, int mods);
@@ -96,6 +98,7 @@ int main() {
 
     std::vector<Enemy*> enemies;
     std::vector<Bullet*> bullets;
+    std::vector<Collectable*> collectable;
 
     Player player;
     player.setName("player");
@@ -103,7 +106,10 @@ int main() {
     player.bullets = &bullets;
 
     
-
+    MeshInstance* beerInstance = new MeshInstance("Beer");
+    beerInstance->setMesh(assetManager.getMesh("beer.obj"));
+    beerInstance->setShader(assetManager.getShader("standart"));
+    beerInstance->setMaterial(assetManager.getMaterial("test"));
 
 
     MeshInstance* bulletInstance = new MeshInstance("Bullet");
@@ -117,13 +123,25 @@ int main() {
     enemyInstance->setMesh(assetManager.getMesh("ship01.obj"));
     enemyInstance->setShader(assetManager.getShader("standart"));
     enemyInstance->setMaterial(assetManager.getMaterial("test"));
+
+
+    MeshInstance* kimchiInstance = new MeshInstance("Kimchi");
+    kimchiInstance->setMesh(assetManager.getMesh("kimchi.obj"));
+    kimchiInstance->setShader(assetManager.getShader("standart"));
+    kimchiInstance->setMaterial(assetManager.getMaterial("test"));
     
 
-    MeshInstance* meshInstance = new MeshInstance("Arrow_player");
+    MeshInstance* meshInstance = new MeshInstance("???");
     meshInstance->setMesh(assetManager.getMesh("ship01.obj"));
     meshInstance->setShader(assetManager.getShader("standart"));
     meshInstance->setMaterial(assetManager.getMaterial("test"));
     scene.addChild(meshInstance);
+
+    MeshInstance* playerInstance = new MeshInstance("Arrow_player");
+    playerInstance->setMesh(assetManager.getMesh("player.obj"));
+    playerInstance->setShader(assetManager.getShader("standart"));
+    playerInstance->setMaterial(assetManager.getMaterial("test"));
+    scene.addChild(playerInstance);
 
 
     MeshInstance* terrain = new MeshInstance("terrain");
@@ -146,7 +164,7 @@ int main() {
 
    
 
-    int spawn_enemy_every = 40;
+    int spawn_enemy_every = 60;
     int enemy_spawn_countdown = spawn_enemy_every;
 
 
@@ -230,7 +248,7 @@ int main() {
                 enemy->countdown_max /= hard * 1;
                 enemy->transform = player.transform;
                 enemy->transform.position.z = player.transform.position.z;
-                enemy->transform.position.x = random.randfloat() * 40.0 - 20.0;
+                enemy->transform.position.x = random.randfloat() * 40.0 - 20;
                 enemy->transform.position.y = camera_y_st + 40.0;
 
                 enemies.push_back(enemy);
@@ -240,9 +258,9 @@ int main() {
             camera.transform.position = player.transform.position;
 
             camera.transform.position.x = 0.0f;
-            camera.transform.position.z += 25;
-            camera.transform.position.y = camera_y_st;
-            camera.transform.rotation.x = 0.4;
+            camera.transform.position.z += 30;
+            camera.transform.position.y = camera_y_st + 2.0;
+            camera.transform.rotation.x = 0.3;
 
            /* scene.getChild("terrain")->transform = camera.transform;
             scene.getChild("terrain")->transform.position.y += 6;
@@ -269,7 +287,7 @@ int main() {
 
 
             std::unordered_set<Bullet*> deleted_bullets;
-
+            std::unordered_set<Collectable*> deleted_collectables;
             std::unordered_set<Enemy*> deleted_enemies;
 
             scene.update();
@@ -287,11 +305,11 @@ int main() {
                     score -= 10;
                 }
 
-                if (enemy->countdown <= 0) {
+                if (enemy->countdown <= 0 && enemy->transform.position.y > camera_y_st) {
                     Bullet* bullet = new Bullet();
                     bullet->transform = enemy->transform;
                     enemy->countdown = enemy->countdown_max;
-                    bullet->speed = 0.3;
+                    bullet->speed = 0.24;
                     bullet->is_enemy = true;
                     glm::vec3 dir = glm::vec3(0.0);
                     glm::vec2 dir2 = glm::normalize(glm::vec2(player.transform.position.x, player.transform.position.y) - 
@@ -301,7 +319,6 @@ int main() {
 
                     bullet->direction = dir;
                     bullets.push_back(bullet);
-
 
                     if (inv < 0) {
                         glm::vec2 delta = enemy->transform.position - player.transform.position;
@@ -385,6 +402,52 @@ int main() {
             kill_hide_countdown -= 1;
 
             
+
+
+            for (Collectable *col : collectable) {
+                glm::vec2 delta = player.transform.position - col->transform.position;
+                float dist_square = glm::dot(delta, delta);
+                if (dist_square < 4) {
+
+                    switch (col->type) {
+                    case Type::BEER:
+                        inv += 40;
+                        score += 1000;
+                        
+                        break;
+
+                    case Type::KIMCHI:
+                        lives += 1;
+                        score += 1000;
+                        break;
+                    }
+
+                    deleted_collectables.insert(col);
+                }
+
+                col->livetime += 1;
+
+                if (col->livetime > 60 * 10) {
+                    deleted_collectables.insert(col);
+                }
+
+                switch (col->type) {
+                case Type::BEER:
+                    beerInstance->transform = col->transform;
+                    beerInstance->draw();
+                    col->transform.rotation.z += 0.08;
+                    break;
+
+                case Type::KIMCHI:
+                    kimchiInstance->transform = col->transform;
+                    kimchiInstance->draw();
+                    col->transform.rotation.z += 0.08;
+                    break;
+                }
+            }
+            
+
+    
             for (Enemy* enemy : enemies) {
                 if (enemy->health <= 0) {
                     deleted_enemies.insert(enemy);
@@ -394,7 +457,30 @@ int main() {
                     die_countdown += 10;
                     sc = (random.randfloat() + 1.0);
                     score += last_killed.size() * 252.0 * sc ;
+
+                    float r = random.randfloat();
+                    float r2 = random.randfloat();
+
+
+                    if (r2 > 0.8) {
+                        if (r > 0 && r < 0.9) {
+                            Collectable* col = new Collectable();
+                            col->type = Type::BEER;
+                            col->transform = enemy->transform;
+                            collectable.push_back(col);
+                            playerController.countdown_max -= 0.5;
+                        }
+
+                        if (r > 0.9) {
+                            
+                            Collectable* col = new Collectable();
+                            col->type = Type::KIMCHI;
+                            col->transform = enemy->transform;
+                            collectable.push_back(col);
+                        }
+                    }
                 }
+
 
                 enemyInstance->transform = enemy->transform;
                 enemyInstance->draw();
@@ -402,6 +488,11 @@ int main() {
 
 
                 enemy->draw();
+            }
+
+            for (Collectable* col : deleted_collectables) {
+                collectable.erase(std::remove(collectable.begin(), collectable.end(), col), collectable.end());
+                delete col;
             }
 
             for (Enemy* enemy : deleted_enemies) {
